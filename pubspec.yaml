@@ -1,0 +1,23 @@
+name: pulse
+description: A high-fidelity prototype of a dating app called Pulse.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.4.9
+  lucide_icons: 0.257.0
+  google_fonts: ^6.1.0
+  glassmorphism: ^3.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
