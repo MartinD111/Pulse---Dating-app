@@ -6,6 +6,7 @@ const initialState = {
     rainbowMode: false,
     isSearching: false,
     onboardingCompleted: false,
+    sonarEnabled: true,
 };
 
 const appSlice = createSlice({
@@ -33,6 +34,9 @@ const appSlice = createSlice({
         setOnboardingCompleted: (state, action) => {
             state.onboardingCompleted = action.payload;
         },
+        toggleSonarMode: (state) => {
+            state.sonarEnabled = !state.sonarEnabled;
+        },
     },
 });
 
@@ -44,6 +48,7 @@ export const {
     setSearching,
     toggleSearching,
     setOnboardingCompleted,
+    toggleSonarMode,
 } = appSlice.actions;
 
 export default appSlice.reducer;

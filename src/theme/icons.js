@@ -76,6 +76,7 @@ export const ICONS = {
     height: 'human-male-height',
     age: 'calendar',
     distance: 'map-marker-distance',
+    google: 'google',
 };
 
 // Get icon name by key

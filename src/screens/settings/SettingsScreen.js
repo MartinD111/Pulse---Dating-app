@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { getThemeColors } from '../../theme/colors';
-import { toggleDarkMode, toggleRainbowMode } from '../../store/slices/appSlice';
+import { toggleDarkMode, toggleRainbowMode, toggleSonarMode } from '../../store/slices/appSlice';
 import { setProfile } from '../../store/slices/userSlice';
 import {
     setGenderPreference,
@@ -29,7 +29,7 @@ const SettingsScreen = () => {
     const dispatch = useDispatch();
     const user = useSelector(state => state.user);
     const preferences = useSelector(state => state.preferences);
-    const { isDarkMode, rainbowMode } = useSelector(state => state.app);
+    const { isDarkMode, rainbowMode, sonarEnabled } = useSelector(state => state.app);
     const theme = getThemeColors(user.gender, isDarkMode, rainbowMode);
 
     const [name, setName] = useState(user.name);
@@ -328,6 +328,17 @@ const SettingsScreen = () => {
                             <Switch
                                 value={rainbowMode}
                                 onValueChange={() => dispatch(toggleRainbowMode())}
+                                trackColor={{ false: theme.border, true: theme.primary }}
+                                thumbColor={theme.common.white}
+                            />
+                        )}
+
+                        {renderSettingRow(
+                            'radar',
+                            'Sonar Mode',
+                            <Switch
+                                value={sonarEnabled}
+                                onValueChange={() => dispatch(toggleSonarMode())}
                                 trackColor={{ false: theme.border, true: theme.primary }}
                                 thumbColor={theme.common.white}
                             />

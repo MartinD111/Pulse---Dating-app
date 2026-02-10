@@ -5,6 +5,8 @@ import GenderScreen from './GenderScreen';
 import ProfileDetailsScreen from './ProfileDetailsScreen';
 import InterestsScreen from './InterestsScreen';
 import LifestyleScreen from './LifestyleScreen';
+import RegisterScreen from './RegisterScreen';
+import TermsScreen from './TermsScreen';
 
 const Stack = createStackNavigator();
 
@@ -19,6 +21,8 @@ const OnboardingNavigator = () => {
             }}
         >
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Terms" component={TermsScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="Gender" component={GenderScreen} />
             <Stack.Screen name="ProfileDetails" component={ProfileDetailsScreen} />
             <Stack.Screen name="Interests" component={InterestsScreen} />
