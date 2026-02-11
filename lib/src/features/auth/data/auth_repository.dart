@@ -1,6 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AuthUser {
+  final String id;
+  final String? name;
+  final int? age;
+  final bool isOnboarded;
   final DateTime? birthDate;
   final List<String> photoUrls;
   final String? gender; // 'Male', 'Female', 'Both'

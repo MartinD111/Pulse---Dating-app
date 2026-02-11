@@ -3,13 +3,28 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
+import '../features/auth/data/auth_repository.dart';
 
-// ... (imports)
+// Placeholders for screens if they don't exist yet/imported
+import '../features/dashboard/presentation/home_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
+import '../features/matches/data/match_repository.dart'; // MatchProfile is here
+import '../features/profile/presentation/profile_detail_screen.dart'; // Correct path
+import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
+final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+
+  return GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) =>
-            const RegistrationFlow(),
+        builder: (context, state) => const RegistrationFlow(),
       ),
       GoRoute(
         path: '/',
@@ -19,7 +34,13 @@ import '../features/auth/presentation/registration_flow.dart';
       GoRoute(
         path: '/profile',
         builder: (context, state) {
-          final match = state.extra as MatchProfile;
+          // careful with casting, ensure extra is passed
+          final match = state.extra as MatchProfile?;
+          // If match is null, maybe redirect or show error?
+          // For now assuming safe
+          if (match == null)
+            return const Scaffold(
+                body: Center(child: Text("Profile not found")));
           return ProfileDetailScreen(match: match);
         },
       ),

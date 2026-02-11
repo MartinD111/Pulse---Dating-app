@@ -4,6 +4,8 @@ class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isSecondary;
+  final double? width;
+  final double? height;
   final IconData? icon;
 
   const PrimaryButton(
@@ -11,6 +13,8 @@ class PrimaryButton extends StatelessWidget {
       required this.text,
       required this.onPressed,
       this.isSecondary = false,
+      this.width,
+      this.height,
       this.icon});
 
   @override
@@ -18,9 +22,10 @@ class PrimaryButton extends StatelessWidget {
     return ElevatedButton.icon(
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            isSecondary ? Colors.white.withOpacity(0.2) : Colors.white,
+            isSecondary ? Colors.white.withValues(alpha: 0.2) : Colors.white,
         foregroundColor: isSecondary ? Colors.white : const Color(0xFFE91E63),
-        minimumSize: const Size(double.infinity, 56),
+        minimumSize: Size(width ?? double.infinity, height ?? 56),
+        maximumSize: width != null ? Size(width!, height ?? 56) : null,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         elevation: 0,
       ),
