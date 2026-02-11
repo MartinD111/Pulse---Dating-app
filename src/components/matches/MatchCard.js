@@ -55,20 +55,7 @@ const MatchCard = ({ match, onToggleRematch }) => {
                         <Text style={[styles.name, { color: theme.text }]}>
                             {match.name}, {match.age}
                         </Text>
-                        <View style={styles.metaRow}>
-                            <Icon name="clock-outline" size={14} color={theme.textSecondary} />
-                            <Text style={[styles.time, { color: theme.textSecondary }]}>
-                                {formatTime(match.timestamp)}
-                            </Text>
-                        </View>
-                        {match.distance && (
-                            <View style={styles.metaRow}>
-                                <Icon name="map-marker" size={14} color={theme.textSecondary} />
-                                <Text style={[styles.distance, { color: theme.textSecondary }]}>
-                                    {match.distance}m away
-                                </Text>
-                            </View>
-                        )}
+                        {/* Time and Distance removed to match "pill with name, age, picture" request */}
                     </View>
 
                     <Icon name="chevron-right" size={24} color={theme.textSecondary} />

@@ -8,7 +8,7 @@ import RadarAnimation from '../../components/radar/RadarAnimation';
 import SonarPing from '../../components/radar/SonarPing';
 import MatchNotification from '../../components/notifications/MatchNotification';
 
-const RadarScreen = () => {
+const RadarScreen = ({ navigation }) => {
     const dispatch = useDispatch();
     const { gender } = useSelector(state => state.user);
     const { isDarkMode, rainbowMode, isSearching, sonarEnabled } = useSelector(state => state.app);
@@ -145,7 +145,10 @@ const RadarScreen = () => {
                 match={prospectMatch}
                 onGreet={handleGreet}
                 onIgnore={handleIgnore}
-                onViewProfile={() => { }}
+                onViewProfile={() => {
+                    setMatchNotificationVisible(false);
+                    navigation.navigate('ProfileDetail', { match: prospectMatch, onGreet: handleGreet, onIgnore: handleIgnore, isPending: true });
+                }}
             />
         </View>
     );

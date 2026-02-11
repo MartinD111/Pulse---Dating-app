@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, StatusBar } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { getThemeColors } from '../../theme/colors';
 import MatchCard from '../../components/matches/MatchCard';
@@ -10,10 +11,17 @@ const MatchesScreen = () => {
     const { isDarkMode, rainbowMode } = useSelector(state => state.app);
     const { matches } = useSelector(state => state.matches);
     const theme = getThemeColors(gender, isDarkMode, rainbowMode);
+    const navigation = useNavigation();
 
     const handleToggleRematch = (matchId, canRematch) => {
         // TODO: Dispatch action to update match rematch status
         console.log('Toggle rematch for:', matchId, canRematch);
+    };
+
+    const handleMatchPress = (match) => {
+        // Navigate to ProfileDetail in read-only mode (isPending: false)
+        // User said: "če kliknemo na osebo se nam tudi odpre njihova kartica (pozdrav ali ignor ni možen)"
+        navigation.navigate('ProfileDetail', { match, isPending: false });
     };
 
     const renderEmptyState = () => (

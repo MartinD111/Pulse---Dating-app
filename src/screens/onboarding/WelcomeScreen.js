@@ -73,7 +73,7 @@ const WelcomeScreen = ({ navigation }) => {
 
                 <PillButton
                     title="I don't have an account"
-                    onPress={() => navigation.navigate('Register')}
+                    onPress={() => navigation.navigate('RegisterStep1')}
                     variant="outline"
                     style={styles.button}
                 />

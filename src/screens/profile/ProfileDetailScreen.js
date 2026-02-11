@@ -43,10 +43,12 @@ const EDUCATION_ICONS = {
 };
 
 const ProfileDetailScreen = ({ route, navigation }) => {
-    const { match } = route.params;
+    const { match, isPending } = route.params;
     const { gender } = useSelector(state => state.user);
     const { isDarkMode, rainbowMode } = useSelector(state => state.app);
     const theme = getThemeColors(gender, isDarkMode, rainbowMode);
+
+    import PillButton from '../../components/common/PillButton';
 
     const renderInfoRow = (icon, label, value) => (
         <View style={styles.infoRow}>
@@ -57,6 +59,28 @@ const ProfileDetailScreen = ({ route, navigation }) => {
             <Text style={[styles.infoValue, { color: theme.text }]}>{value}</Text>
         </View>
     );
+
+    const handleGreet = () => {
+        // This should probably call a prop function or dispatch an action
+        // For now, let's assume we pass a callback or just go back with a param?
+        // Actually, better to pass the handler from the previous screen or use Redux.
+        // Since this is a Screen, we can't easily pass a callback function via params (warnings).
+        // Best approach: unique ID for match, and dispatch action.
+        console.log('Greeted from profile');
+        navigation.goBack();
+        // In a real app, we'd trigger the "Greet" logic here.
+        // For this prototype, we might just have to assume the user goes back and clicks Greet on the popup,
+        // OR we implement a global/redux action to "Greet" this specific user ID.
+        // User said: "V kartici osebe mora tudi biti pozdrav ali ignor"
+        // Let's implement it as:
+        if (route.params.onGreet) route.params.onGreet();
+        navigation.goBack();
+    };
+
+    const handleIgnore = () => {
+        if (route.params.onIgnore) route.params.onIgnore();
+        navigation.goBack();
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -224,6 +248,29 @@ const ProfileDetailScreen = ({ route, navigation }) => {
                     </GlassCard>
                 )}
             </ScrollView>
+
+            {/* Action Buttons for Pending Matches */}
+            {isPending && (
+                <View style={[styles.footer, { backgroundColor: theme.surfaceGlass, borderTopColor: theme.border }]}>
+                    <View style={styles.actionButtonsContainer}>
+                        <PillButton
+                            title="Ignore"
+                            onPress={handleIgnore}
+                            variant="outline"
+                            icon="close"
+                            style={styles.actionButton}
+                        />
+                        <View style={{ width: 16 }} />
+                        <PillButton
+                            title="Greet"
+                            onPress={handleGreet}
+                            variant="primary"
+                            icon="hand-wave"
+                            style={styles.actionButton}
+                        />
+                    </View>
+                </View>
+            )}
         </View>
     );
 };
@@ -378,6 +425,18 @@ const styles = StyleSheet.create({
     personalityFill: {
         height: '100%',
         borderRadius: 4,
+    },
+    footer: {
+        padding: 24,
+        paddingBottom: 36,
+        borderTopWidth: 1,
+    },
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    actionButton: {
+        flex: 1,
     },
 });
 

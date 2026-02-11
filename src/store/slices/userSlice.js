@@ -21,6 +21,7 @@ const initialState = {
         longitude: null,
     },
     isPremium: false,
+    interestedIn: 'both', // 'male' | 'female' | 'both'
 };
 
 const userSlice = createSlice({
@@ -36,7 +37,7 @@ const userSlice = createSlice({
             state.gender = action.payload;
         },
         setProfile: (state, action) => {
-            const { name, age, hobbies, personality, height, jobStatus, education, hairColor, location, isPremium } = action.payload;
+            const { name, age, hobbies, personality, height, jobStatus, education, hairColor, location, isPremium, interestedIn } = action.payload;
             if (name !== undefined) state.name = name;
             if (age !== undefined) state.age = age;
             if (hobbies !== undefined) state.hobbies = hobbies;
@@ -47,6 +48,7 @@ const userSlice = createSlice({
             if (hairColor !== undefined) state.hairColor = hairColor;
             if (location !== undefined) state.location = { ...state.location, ...location };
             if (isPremium !== undefined) state.isPremium = isPremium;
+            if (interestedIn !== undefined) state.interestedIn = interestedIn;
         },
         setProfileImages: (state, action) => {
             state.profileImages = action.payload.slice(0, 3); // Max 3 images
