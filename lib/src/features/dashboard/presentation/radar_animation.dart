@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 class RadarAnimation extends StatefulWidget {
-  const RadarAnimation({super.key});
+  final bool isScanning;
+  const RadarAnimation({super.key, this.isScanning = true});
 
   @override
   State<RadarAnimation> createState() => _RadarAnimationState();
@@ -18,7 +20,27 @@ class _RadarAnimationState extends State<RadarAnimation>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
-    )..repeat();
+    );
+
+    if (widget.isScanning) {
+      _controller.repeat();
+      FlutterBackgroundService().startService();
+    }
+  }
+
+  @override
+  void didUpdateWidget(RadarAnimation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isScanning != oldWidget.isScanning) {
+      if (widget.isScanning) {
+        _controller.repeat();
+        FlutterBackgroundService().startService();
+      } else {
+        _controller.stop();
+        _controller.reset();
+        // Optional: Stop background service
+      }
+    }
   }
 
   @override
