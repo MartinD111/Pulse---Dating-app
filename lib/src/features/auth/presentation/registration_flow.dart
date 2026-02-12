@@ -1,12 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../data/auth_repository.dart';
-import 'split_background.dart';
+import 'radar_background.dart';
 
 class RegistrationFlow extends ConsumerStatefulWidget {
   const RegistrationFlow({super.key});
@@ -22,15 +24,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // --- Step 1: Basic Info ---
   final TextEditingController _nameController = TextEditingController();
   DateTime? _birthDate;
-  // final List<String> _photoUrls = []; // Mock photo storage
-  String? _selectedGender; // 'Male', 'Female', 'Both'
+  final List<File?> _photos = [null, null, null, null];
+  final ImagePicker _picker = ImagePicker();
+  String? _selectedGender; // 'Moški', 'Ženska', 'Ne želim povedati'
   String _selectedLanguage = 'EN';
 
   // --- Step 2: About You ---
   String? _interestedIn;
   bool _isSmoker = false;
-  String _occupation = 'Student'; // 'Student' or 'Employed'
-  String _drinkingHabit = 'Occasionally';
+  String _occupation = 'Študent'; // 'Študent' or 'Zaposlen'
+  String _drinkingHabit = 'Občasno';
   double _introvertScale = 3.0; // 1-5
   final List<String> _lookingFor = [];
   final List<String> _spokenLanguages = [];
@@ -53,33 +56,45 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
+  Future<void> _pickImage(int index) async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _photos[index] = File(image.path);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // If gender is selected, use that theme (mock logic for now).
-    // If NOT selected (Step 1 initially), use SplitBackground.
-    // For simplicity in this step, we keep SplitBackground on Step 1 always.
-
     Widget content = PageView(
       controller: _pageController,
       physics: const NeverScrollableScrollPhysics(), // Disable swipe
       onPageChanged: (p) => setState(() => _currentPage = p),
       children: [
         _buildStep1BasicInfo(),
-        _buildStep2AboutYou(), // Placeholder
-        _buildStep3MoreDetails(), // Placeholder
+        _buildStep2AboutYou(),
+        _buildStep3MoreDetails(),
       ],
     );
 
-    if (_currentPage == 0 && _selectedGender == null) {
-      return SplitBackground(child: content);
+    // Use RadarBackground for Step 1
+    if (_currentPage == 0) {
+      return Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: RadarBackground(child: content),
+      );
     } else {
+      // Use GradientScaffold for other steps to maintain consistency or specific theme
+      // For now, let's keep a consistent dark gradient if not strictly gender-themed yet
+      // Or we can use the gender theme if selected.
       List<Color> gradientColors;
-      if (_selectedGender == 'Male') {
+      if (_selectedGender == 'Moški') {
         gradientColors = [Colors.blue.shade900, Colors.black];
-      } else if (_selectedGender == 'Female') {
+      } else if (_selectedGender == 'Ženska') {
         gradientColors = [Colors.pink.shade900, Colors.black];
       } else {
-        gradientColors = [Colors.purple.shade900, Colors.black];
+        gradientColors = [const Color(0xFF2E003E), Colors.black]; // Deep Purple
       }
 
       return GradientScaffold(
@@ -91,13 +106,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   Widget _buildStep1BasicInfo() {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center, // Center eveything
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Placeholder for alignment or back button if needed
+              const SizedBox(width: 48),
               Text("Osnovni podatki",
                   style: GoogleFonts.outfit(
                       fontSize: 28,
@@ -116,17 +133,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
           // Name Input
           TextField(
             controller: _nameController,
-            style: const TextStyle(color: Colors.white),
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
             decoration: const InputDecoration(
               labelText: 'Ime',
               labelStyle: TextStyle(color: Colors.white70),
+              alignLabelWithHint: true,
               enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.white70)),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white)),
             ),
           ),
           const SizedBox(height: 20),
@@ -143,6 +164,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               if (picked != null) setState(() => _birthDate = picked);
             },
             child: Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.white70)),
@@ -151,60 +173,76 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _birthDate == null
                     ? "Datum rojstva"
                     : DateFormat('dd. MM. yyyy').format(_birthDate!),
+                textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
           // Photos (1-4)
           Text("Dodaj slike (1-4)",
               style: GoogleFonts.outfit(color: Colors.white, fontSize: 16)),
-          const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: List.generate(4, (index) {
-                return Container(
-                  width: 80,
-                  height: 80,
-                  margin: const EdgeInsets.only(right: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white24,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white30),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white),
-                );
-              }),
-            ),
+          const SizedBox(height: 15),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(4, (index) {
+              return GestureDetector(
+                onTap: () => _pickImage(index),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 70,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: Colors.white12,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(color: Colors.white30),
+                        image: _photos[index] != null
+                            ? DecorationImage(
+                                image: FileImage(_photos[index]!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                      ),
+                      child: _photos[index] == null
+                          ? const Icon(Icons.add, color: Colors.white)
+                          : null,
+                    ),
+                    if (index == 0)
+                      Positioned(
+                        top: -8,
+                        right: -8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.amber,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.star,
+                              size: 12, color: Colors.black),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
           // Gender Selection
           Text("Spol",
               style: GoogleFonts.outfit(color: Colors.white, fontSize: 16)),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ['Male', 'Female', 'Both'].map((gender) {
-              final isSelected = _selectedGender == gender;
-              return ChoiceChip(
-                label: Text(gender),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() => _selectedGender = selected ? gender : null);
-                },
-                backgroundColor: Colors.white12,
-                selectedColor: gender == 'Male'
-                    ? Colors.blue
-                    : gender == 'Female'
-                        ? Colors.pink
-                        : Colors.purple,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white70),
-              );
-            }).toList(),
+          const SizedBox(height: 15),
+          Column(
+            children: [
+              _buildGenderOption('Moški', LucideIcons.user),
+              const SizedBox(height: 10),
+              _buildGenderOption('Ženska', LucideIcons.user),
+              const SizedBox(height: 10),
+              _buildGenderOption('Ne želim povedati', LucideIcons.userX),
+            ],
           ),
 
           const Spacer(),
@@ -227,6 +265,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
+  Widget _buildGenderOption(String label, IconData icon) {
+    final isSelected = _selectedGender == label;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedGender = label),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Colors.white.withValues(alpha: 0.2)
+              : Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: isSelected ? Colors.white : Colors.white24),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.white70,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildStep2AboutYou() {
     return Padding(
       padding: const EdgeInsets.all(24.0),
@@ -234,81 +304,72 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Nekaj o tebi",
-                style: GoogleFonts.outfit(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+            const SizedBox(height: 40),
+            Center(
+              child: Text("Nekaj o tebi",
+                  style: GoogleFonts.outfit(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
             const SizedBox(height: 30),
 
             // Interested In
-            _buildSectionLabel("Koga iščem?"),
+            _buildSectionLabel("Koga iščem?", LucideIcons.search),
             Wrap(
               spacing: 10,
-              children: ['Male', 'Female', 'Both'].map((option) {
-                return ChoiceChip(
-                  label: Text(option),
-                  selected: _interestedIn == option,
-                  onSelected: (s) =>
-                      setState(() => _interestedIn = s ? option : null),
-                  selectedColor: Colors.white24,
-                  backgroundColor: Colors.black26,
-                  labelStyle: const TextStyle(color: Colors.white),
-                );
+              children: ['Moški', 'Ženska', 'Oba'].map((option) {
+                return _buildChoiceChip(option, _interestedIn == option,
+                    (s) => setState(() => _interestedIn = s ? option : null));
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // Smoking
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildSectionLabel("Kadil/a?"),
+                _buildSectionLabel("Kadil/a?", LucideIcons.cigarette),
                 Switch(
                   value: _isSmoker,
                   onChanged: (v) => setState(() => _isSmoker = v),
-                  activeThumbColor: Colors.white,
+                  thumbColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return Colors.white;
+                    }
+                    return Colors.white70;
+                  }),
+                  activeTrackColor: Colors.purple.shade300,
+                  inactiveTrackColor: Colors.white12,
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
 
             // Occupation
-            _buildSectionLabel("Status"),
+            _buildSectionLabel("Status", LucideIcons.briefcase),
             Wrap(
               spacing: 10,
-              children: ['Student', 'Zaposlen'].map((option) {
-                return ChoiceChip(
-                  label: Text(option),
-                  selected: _occupation == option,
-                  onSelected: (s) => setState(() => _occupation = option),
-                  selectedColor: Colors.white24,
-                  backgroundColor: Colors.black26,
-                  labelStyle: const TextStyle(color: Colors.white),
-                );
+              children: ['Študent', 'Zaposlen'].map((option) {
+                return _buildChoiceChip(option, _occupation == option,
+                    (s) => setState(() => _occupation = option));
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // Drinking
-            _buildSectionLabel("Alkohol"),
+            _buildSectionLabel("Alkohol", LucideIcons.beer),
             Wrap(
               spacing: 10,
               children: ['Nikoli', 'Občasno', 'Redno'].map((option) {
-                return ChoiceChip(
-                  label: Text(option),
-                  selected: _drinkingHabit == option,
-                  onSelected: (s) => setState(() => _drinkingHabit = option),
-                  selectedColor: Colors.white24,
-                  backgroundColor: Colors.black26,
-                  labelStyle: const TextStyle(color: Colors.white),
-                );
+                return _buildChoiceChip(option, _drinkingHabit == option,
+                    (s) => setState(() => _drinkingHabit = option));
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // Introvert/Extrovert Slider
-            _buildSectionLabel("Introvertiranost / Ekstrovertiranost (1-5)"),
+            _buildSectionLabel("Introvert / Ekstrovert", LucideIcons.users),
             Slider(
               value: _introvertScale,
               min: 1,
@@ -326,12 +387,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Text("Ekstrovert", style: TextStyle(color: Colors.white70)),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // Looking For
-            _buildSectionLabel("Iščem"),
+            _buildSectionLabel("Iščem", LucideIcons.heart),
             Wrap(
               spacing: 10,
+              runSpacing: 10,
               children: [
                 'Kratkoročna zabava',
                 'Dolgoročno razmerje',
@@ -339,31 +401,24 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 'Klepet'
               ].map((option) {
                 final isSelected = _lookingFor.contains(option);
-                return FilterChip(
-                  label: Text(option),
-                  selected: isSelected,
-                  onSelected: (s) {
-                    setState(() {
-                      if (s) {
-                        _lookingFor.add(option);
-                      } else {
-                        _lookingFor.remove(option);
-                      }
-                    });
-                  },
-                  checkmarkColor: Colors.white,
-                  selectedColor: Colors.white24,
-                  backgroundColor: Colors.black26,
-                  labelStyle: const TextStyle(color: Colors.white),
-                );
+                return _buildFilterChip(option, isSelected, (s) {
+                  setState(() {
+                    if (s) {
+                      _lookingFor.add(option);
+                    } else {
+                      _lookingFor.remove(option);
+                    }
+                  });
+                });
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // Languages
-            _buildSectionLabel("Govorim (max 5)"),
+            _buildSectionLabel("Govorim (max 5)", LucideIcons.languages),
             Wrap(
               spacing: 10,
+              runSpacing: 10,
               children: [
                 'Slovenščina',
                 'Angleščina',
@@ -374,25 +429,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 'Hrvaščina'
               ].map((option) {
                 final isSelected = _spokenLanguages.contains(option);
-                return FilterChip(
-                  label: Text(option),
-                  selected: isSelected,
-                  onSelected: (s) {
-                    setState(() {
-                      if (s) {
-                        if (_spokenLanguages.length < 5) {
-                          _spokenLanguages.add(option);
-                        }
-                      } else {
-                        _spokenLanguages.remove(option);
+                return _buildFilterChip(option, isSelected, (s) {
+                  setState(() {
+                    if (s) {
+                      if (_spokenLanguages.length < 5) {
+                        _spokenLanguages.add(option);
                       }
-                    });
-                  },
-                  checkmarkColor: Colors.white,
-                  selectedColor: Colors.white24,
-                  backgroundColor: Colors.black26,
-                  labelStyle: const TextStyle(color: Colors.white),
-                );
+                    } else {
+                      _spokenLanguages.remove(option);
+                    }
+                  });
+                });
               }).toList(),
             ),
 
@@ -402,7 +449,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 TextButton(
                   onPressed: _prevPage,
                   child: const Text("Nazaj",
-                      style: TextStyle(color: Colors.white70)),
+                      style: TextStyle(color: Colors.white70, fontSize: 16)),
                 ),
                 const Spacer(),
                 PrimaryButton(
@@ -419,14 +466,58 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  Widget _buildSectionLabel(String text) {
+  Widget _buildSectionLabel(String text, IconData icon) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(text,
-          style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w500)),
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white70, size: 18),
+          const SizedBox(width: 8),
+          Text(text,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChoiceChip(
+      String label, bool isSelected, Function(bool) onSelected) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: Colors.white,
+      backgroundColor: Colors.black45,
+      labelStyle: TextStyle(
+          color: isSelected ? Colors.black : Colors.white,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: isSelected ? Colors.white : Colors.white24),
+      ),
+      showCheckmark: false,
+    );
+  }
+
+  Widget _buildFilterChip(
+      String label, bool isSelected, Function(bool) onSelected) {
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: Colors.white,
+      backgroundColor: Colors.black45,
+      labelStyle: TextStyle(
+          color: isSelected ? Colors.black : Colors.white,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: isSelected ? Colors.white : Colors.white24),
+      ),
+      showCheckmark: false,
     );
   }
 
@@ -468,6 +559,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 40),
             Text("Nekaj malo več o tebi",
                 style: GoogleFonts.outfit(
                     fontSize: 28,
@@ -476,7 +568,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 30),
 
             // Hobbies Categories
-            _buildSectionLabel("Hobiji"),
+            _buildSectionLabel("Hobiji", LucideIcons.gamepad2),
             ...hobbyCategories.entries.map((entry) {
               return Theme(
                 data: Theme.of(context)
@@ -492,23 +584,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       runSpacing: 8,
                       children: entry.value.map((hobby) {
                         final isSelected = _selectedHobbies.contains(hobby);
-                        return FilterChip(
-                          label: Text(hobby),
-                          selected: isSelected,
-                          onSelected: (s) {
-                            setState(() {
-                              if (s) {
-                                _selectedHobbies.add(hobby);
-                              } else {
-                                _selectedHobbies.remove(hobby);
-                              }
-                            });
-                          },
-                          checkmarkColor: Colors.white,
-                          selectedColor: Colors.white24,
-                          backgroundColor: Colors.black26,
-                          labelStyle: const TextStyle(color: Colors.white),
-                        );
+                        return _buildFilterChip(hobby, isSelected, (s) {
+                          setState(() {
+                            if (s) {
+                              _selectedHobbies.add(hobby);
+                            } else {
+                              _selectedHobbies.remove(hobby);
+                            }
+                          });
+                        });
                       }).toList(),
                     ),
                     const SizedBox(height: 10),
@@ -516,10 +600,45 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 ),
               );
             }),
+            const SizedBox(height: 20),
+
+            // Custom Hobbies Section
+            _buildSectionLabel("Moji hobiji (Po meri)", LucideIcons.plusCircle),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                // Display custom hobbies (those NOT in standard categories)
+                ..._selectedHobbies
+                    .where((h) =>
+                        !hobbyCategories.values.any((list) => list.contains(h)))
+                    .map((h) => Chip(
+                          label: Text(h,
+                              style: const TextStyle(color: Colors.white)),
+                          backgroundColor: Colors.pinkAccent,
+                          deleteIcon: const Icon(Icons.close,
+                              size: 14, color: Colors.white),
+                          onDeleted: () =>
+                              setState(() => _selectedHobbies.remove(h)),
+                          side: BorderSide.none,
+                          shape: const StadiumBorder(),
+                        )),
+                ActionChip(
+                  label: const Text("Dodaj hobi",
+                      style: TextStyle(color: Colors.white)),
+                  backgroundColor: Colors.white10,
+                  avatar: const Icon(Icons.add, color: Colors.white, size: 16),
+                  onPressed: _showAddHobbyDialog,
+                  side: BorderSide.none,
+                  shape: const StadiumBorder(),
+                ),
+              ],
+            ),
             const SizedBox(height: 30),
 
             // Optional Prompts
-            _buildSectionLabel("Zabaven dejstvo o meni (Opcijsko)"),
+            _buildSectionLabel(
+                "Zabaven dejstvo o meni (Opcijsko)", LucideIcons.smile),
             ...[
               'Skuham zelo dobro kavo...',
               'Najboljši koncert je bil...',
@@ -544,8 +663,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   },
                 ),
               );
-            }).take(
-                2), // Show only top 2 for now to save space, user can see more if needed ideally
+            }).take(2),
 
             const SizedBox(height: 40),
             Row(
@@ -553,7 +671,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 TextButton(
                   onPressed: _prevPage,
                   child: const Text("Nazaj",
-                      style: TextStyle(color: Colors.white70)),
+                      style: TextStyle(color: Colors.white70, fontSize: 16)),
                 ),
                 const Spacer(),
                 PrimaryButton(
@@ -571,44 +689,90 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   void _completeRegistration() async {
-    // Show Congrats Animation logic...
-    showDialog(
+    // Elegant "Congratulations" Animation Dialog
+    showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      builder: (c) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.black87,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
+      barrierLabel: "Congratulations",
+      transitionDuration: const Duration(milliseconds: 600),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Container();
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: anim1, curve: Curves.elasticOut),
+          child: FadeTransition(
+            opacity: anim1,
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple.shade900.withValues(alpha: 0.9),
+                      Colors.blue.shade900.withValues(alpha: 0.9)
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: Colors.white30, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    )
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      duration: const Duration(seconds: 1),
+                      curve: Curves.elasticOut,
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: value,
+                          child: const Icon(LucideIcons.partyPopper,
+                              color: Colors.amberAccent, size: 80),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 25),
+                    Text("Čestitke!",
+                        style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 15),
+                    const Text(
+                      "Uspešno ste ustvarili račun.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                    const SizedBox(height: 40),
+                    const SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 3),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(LucideIcons.partyPopper,
-                  color: Colors.amber, size: 60),
-              const SizedBox(height: 20),
-              Text("Čestitke!",
-                  style: GoogleFonts.outfit(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              const Text("Uspešno ste ustvarili račun.",
-                  style: TextStyle(color: Colors.white70)),
-              const SizedBox(height: 30),
-              const CircularProgressIndicator(color: Colors.white),
-            ],
-          ),
-        ),
-      ),
+        );
+      },
     );
 
-    // Save Data
+    // Save Data logic (Mock)
+    // ... (rest of logic remains similar, just saving photos too if needed)
     final user = AuthUser(
-      id: 'generated_id', // In real app comes from backend
+      id: 'generated_id',
       name: _nameController.text,
       age: (DateTime.now().difference(_birthDate!).inDays / 365).floor(),
       birthDate: _birthDate,
@@ -623,14 +787,78 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       hobbies: _selectedHobbies,
       prompts: _prompts,
       isOnboarded: true,
-      isEmailVerified: false, // Default false
+      isEmailVerified: false,
     );
 
-    await Future.delayed(const Duration(seconds: 2)); // Mock animation delay
+    await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
       Navigator.of(context).pop(); // Close dialog
       ref.read(authStateProvider.notifier).completeOnboarding(user);
     }
+  }
+
+  void _showAddHobbyDialog() {
+    final nameController = TextEditingController();
+    final emojiController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text("Dodaj svoj hobi",
+            style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: "Ime hobija",
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white54)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: emojiController,
+              style: const TextStyle(color: Colors.white),
+              maxLength: 2,
+              decoration: const InputDecoration(
+                labelText: "Ikona (Emoji)",
+                labelStyle: TextStyle(color: Colors.white70),
+                helperText: "Uporabi sistemsko tipkovnico za emoji",
+                helperStyle: TextStyle(color: Colors.white54),
+                enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white54)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child:
+                const Text("Prekliči", style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent),
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                setState(() {
+                  final newHobby =
+                      "${emojiController.text.trim()} ${nameController.text.trim()}";
+                  _selectedHobbies.add(newHobby);
+                });
+                Navigator.pop(ctx);
+              }
+            },
+            child: const Text("Dodaj", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

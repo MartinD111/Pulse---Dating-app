@@ -4,6 +4,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'radar_animation.dart';
 import '../../../shared/ui/glass_card.dart';
+import '../../../shared/ui/liquid_nav_bar.dart'; // Import LiquidNavBar
 import '../../matches/data/match_repository.dart';
 import '../../matches/presentation/match_dialog.dart';
 import '../../settings/presentation/settings_screen.dart';
@@ -54,89 +55,73 @@ class HomeScreen extends ConsumerWidget {
         user?.isEmailVerified == true || user?.isAdmin == true;
     final bool isPremium = user?.isPremium == true;
 
-    // Define Screen Lists based on Premium Status
+    // Define Screens and Nav Items
+    final List<Widget> screens;
+    final List<LiquidNavItem> navItems;
 
-    // BASIC: [0: Radar, 1: Matches, 2: Settings]
-    // PREMIUM: [0: Radar, 1: Map, 2: Matches, 3: Settings]
-
-    final List<Widget> screens = isPremium
-        ? [
-            // 0: Radar
-            _buildRadarView(
-                ref, context, canAccessRadar, isScanning, isPremium),
-            // 1: Map
-            const PulseMapScreen(),
-            // 2: Matches
-            const MatchesScreen(),
-            // 3: Settings
-            const SettingsScreen(),
-          ]
-        : [
-            // 0: Radar
-            _buildRadarView(
-                ref, context, canAccessRadar, isScanning, isPremium),
-            // 1: Matches
-            const MatchesScreen(),
-            // 2: Settings
-            const SettingsScreen(),
-          ];
+    if (isPremium) {
+      screens = [
+        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium),
+        const PulseMapScreen(),
+        const MatchesScreen(),
+        const SettingsScreen(),
+      ];
+      navItems = [
+        LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
+        LiquidNavItem(icon: LucideIcons.map, label: 'Map'),
+        LiquidNavItem(icon: LucideIcons.users, label: 'Matches'),
+        LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
+      ];
+    } else {
+      screens = [
+        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium),
+        const MatchesScreen(),
+        const SettingsScreen(),
+      ];
+      navItems = [
+        LiquidNavItem(icon: LucideIcons.radar, label: 'Radar'),
+        LiquidNavItem(icon: LucideIcons.users, label: 'Matches'),
+        LiquidNavItem(icon: LucideIcons.settings, label: 'Settings'),
+      ];
+    }
 
     return Stack(
       children: [
-        IndexedStack(
-          index: navIndex,
-          children: screens,
+        // Content with Liquid Transition
+        Positioned.fill(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            switchInCurve: Curves.easeOutQuart,
+            switchOutCurve: Curves.easeInQuart,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale:
+                      Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<int>(navIndex),
+              child: screens[navIndex],
+            ),
+          ),
         ),
 
-        // Navigation Bar
+        // Floating Liquid Navigation Bar
         Positioned(
           bottom: 30,
-          left: 20,
-          right: 20,
-          child: GlassCard(
-            opacity: 0.5,
-            borderColor: isPremium
-                ? Colors.amber
-                : Colors.white.withValues(alpha: 0.2), // Premium Gold Border
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                // Radar Icon (Always Index 0)
-                IconButton(
-                    icon: Icon(LucideIcons.radar,
-                        color:
-                            navIndex == 0 ? Colors.pinkAccent : Colors.white),
-                    onPressed: () =>
-                        ref.read(navIndexProvider.notifier).state = 0),
-
-                // Map Icon (Premium Only - Index 1)
-                if (isPremium)
-                  IconButton(
-                      icon: Icon(LucideIcons.map,
-                          color:
-                              navIndex == 1 ? Colors.pinkAccent : Colors.white),
-                      onPressed: () =>
-                          ref.read(navIndexProvider.notifier).state = 1),
-
-                // Matches Icon (Basic: Index 1, Premium: Index 2)
-                IconButton(
-                    icon: Icon(LucideIcons.users,
-                        color: navIndex == (isPremium ? 2 : 1)
-                            ? Colors.pinkAccent
-                            : Colors.white),
-                    onPressed: () => ref.read(navIndexProvider.notifier).state =
-                        isPremium ? 2 : 1),
-
-                // Settings Icon (Basic: Index 2, Premium: Index 3)
-                IconButton(
-                    icon: Icon(LucideIcons.settings,
-                        color: navIndex == (isPremium ? 3 : 2)
-                            ? Colors.pinkAccent
-                            : Colors.white),
-                    onPressed: () => ref.read(navIndexProvider.notifier).state =
-                        isPremium ? 3 : 2),
-              ],
-            ),
+          left: 0,
+          right: 0,
+          child: LiquidNavBar(
+            currentIndex: navIndex,
+            isPremium: isPremium,
+            items: navItems,
+            onTap: (index) {
+              ref.read(navIndexProvider.notifier).state = index;
+            },
           ),
         ),
       ],

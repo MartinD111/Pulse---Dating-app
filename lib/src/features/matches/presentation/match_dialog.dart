@@ -11,6 +11,36 @@ class MatchDialog extends ConsumerWidget {
 
   const MatchDialog({super.key, required this.match});
 
+  IconData _getHobbyIcon(String hobby) {
+    switch (hobby.toLowerCase()) {
+      case 'music':
+      case 'glasba':
+        return LucideIcons.music;
+      case 'art':
+      case 'umetnost':
+      case 'slikanje':
+        return LucideIcons.palette;
+      case 'travel':
+      case 'potovanja':
+        return LucideIcons.plane;
+      case 'sport':
+      case 'šport':
+      case 'fitnes':
+        return LucideIcons.dumbbell;
+      case 'reading':
+      case 'branje':
+        return LucideIcons.book;
+      case 'movies':
+      case 'filmi':
+        return LucideIcons.film;
+      case 'gaming':
+      case 'videoigre':
+        return LucideIcons.gamepad2;
+      default:
+        return LucideIcons.star;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Align(
@@ -26,7 +56,10 @@ class MatchDialog extends ConsumerWidget {
                 onTap: () {
                   ref
                       .read(matchControllerProvider.notifier)
-                      .dismiss(); // Close dialog
+                      .dismiss(); // Close dialog state
+                  if (context.canPop()) {
+                    context.pop(); // Close dialog visually
+                  }
                   context.push('/profile', extra: match); // Open full profile
                 },
                 child: GlassCard(
@@ -53,33 +86,38 @@ class MatchDialog extends ConsumerWidget {
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            // Name & Age
+                            // Name & Age - DARK TEXT for contrast on white glass
                             Text("${match.name}, ${match.age}",
                                 style: GoogleFonts.outfit(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white)),
+                                    color: Colors.black87)),
+
                             const SizedBox(height: 8),
 
                             // Top 3 Hobbies
                             Wrap(
                               alignment: WrapAlignment.center,
                               spacing: 8,
-                              children: match.hobbies
-                                  .take(3)
-                                  .map((h) => Chip(
-                                        label: Text(h,
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 12)),
-                                        backgroundColor: Colors.white24,
-                                        padding: EdgeInsets.zero,
-                                        labelPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 8),
-                                        side: BorderSide.none,
-                                      ))
-                                  .toList(),
+                              runSpacing: 8,
+                              children: match.hobbies.take(3).map((h) {
+                                return Chip(
+                                  avatar: Icon(_getHobbyIcon(h),
+                                      size: 16, color: Colors.white),
+                                  label: Text(h,
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600)),
+                                  backgroundColor: Colors.black.withValues(
+                                      alpha: 0.6), // Darker bg for contrast
+                                  padding: const EdgeInsets.all(4),
+                                  labelPadding: const EdgeInsets.only(right: 8),
+                                  side: BorderSide.none,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20)),
+                                );
+                              }).toList(),
                             ),
                           ],
                         ),
@@ -94,26 +132,31 @@ class MatchDialog extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Ignore Button
+                  // Confirm/Tick Button (LEFT)
+                  _ActionButton(
+                    icon: LucideIcons.check,
+                    color: Colors.greenAccent,
+                    onTap: () {
+                      ref.read(matchControllerProvider.notifier).like();
+                      if (context.canPop()) {
+                        context.pop();
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text("Pozdrav poslan ${match.name}!")),
+                      );
+                    },
+                  ),
+
+                  // Ignore/X Button (RIGHT)
                   _ActionButton(
                     icon: LucideIcons.x,
                     color: Colors.redAccent,
                     onTap: () {
                       ref.read(matchControllerProvider.notifier).dismiss();
-                    },
-                  ),
-
-                  // Greet Button
-                  _ActionButton(
-                    icon: LucideIcons.messageCircle,
-                    color: Colors.greenAccent,
-                    onTap: () {
-                      ref.read(matchControllerProvider.notifier).like();
-                      // Optionally show toast/snackbar here
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Pozdrav poslan ${match.name}!")),
-                      );
+                      if (context.canPop()) {
+                        context.pop(); // Explicitly close the dialog
+                      }
                     },
                   ),
                 ],
@@ -141,13 +184,14 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.black
+                .withValues(alpha: 0.6), // Dark background for buttons
             shape: BoxShape.circle,
-            border: Border.all(color: color.withValues(alpha: 0.5), width: 2),
+            border: Border.all(color: color, width: 2),
             boxShadow: [
               BoxShadow(
-                  color: color.withValues(alpha: 0.2),
-                  blurRadius: 10,
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 15,
                   spreadRadius: 2)
             ]),
         child: Icon(icon, color: color, size: 32),

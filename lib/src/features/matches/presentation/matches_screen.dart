@@ -57,9 +57,18 @@ class _MatchesScreenState extends State<MatchesScreen> {
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
+          const SizedBox(height: 10),
+
+          // New Headers
+          Text("Upravljaj svoje pretekle stike",
+              style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white)),
           const SizedBox(height: 5),
-          const Text("Upravljaj svoje pretekle stike",
-              style: TextStyle(color: Colors.white70)),
+          const Text("Ali želiš še kdaj jih srečati ali ne",
+              style: TextStyle(color: Colors.white70, fontSize: 14)),
+
           const SizedBox(height: 20),
           Expanded(
             child: ListView.builder(
@@ -69,44 +78,53 @@ class _MatchesScreenState extends State<MatchesScreen> {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: GlassCard(
-                    opacity: 0.1,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      leading: CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(match.imageUrl),
-                      ),
-                      title: Text("${match.name}, ${match.age}",
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 18)),
-                      trailing: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Switch(
+                    opacity: 0.15,
+                    borderRadius: 50, // Pill shape
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    child: Row(
+                      children: [
+                        // Avatar
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundImage: NetworkImage(match.imageUrl),
+                        ),
+                        const SizedBox(width: 15),
+
+                        // Name & Age
+                        Text("${match.name}, ${match.age}",
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 18)),
+
+                        const Spacer(),
+
+                        // Toggle
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch(
                             value: match.wantToMatchAgain,
-                            activeThumbColor: Colors.pinkAccent,
+                            activeThumbColor: Colors.white,
+                            activeTrackColor: Colors.pinkAccent,
+                            inactiveThumbColor: Colors.white70,
+                            inactiveTrackColor: Colors.white12,
+                            thumbColor: WidgetStateProperty.resolveWith<Color>(
+                                (states) {
+                              if (states.contains(WidgetState.selected)) {
+                                return Colors.white;
+                              }
+                              return Colors.white70;
+                            }),
                             onChanged: (val) {
                               setState(() {
                                 match.wantToMatchAgain = val;
                               });
-                              // Logic to save preference would go here
                             },
                           ),
-                        ],
-                      ),
-                      subtitle: Text(
-                        match.wantToMatchAgain
-                            ? "Ponovno matchanje: DA"
-                            : "Ponovno matchanje: NE",
-                        style: TextStyle(
-                            color: match.wantToMatchAgain
-                                ? Colors.greenAccent
-                                : Colors.white38,
-                            fontSize: 12),
-                      ),
+                        ),
+                        const SizedBox(width: 5),
+                      ],
                     ),
                   ),
                 );
