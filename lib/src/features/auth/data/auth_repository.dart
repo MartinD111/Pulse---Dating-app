@@ -92,7 +92,7 @@ class AuthRepository {
 
   Future<AuthUser> loginWithEmail(String email, String password) async {
     await Future.delayed(const Duration(seconds: 1)); // Mock delay
-    _currentUser = const AuthUser(id: 'user_123');
+    _currentUser = const AuthUser(id: 'user_123', isOnboarded: true);
     return _currentUser!;
   }
 

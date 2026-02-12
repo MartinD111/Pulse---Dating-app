@@ -48,19 +48,29 @@ class LoginScreen extends ConsumerWidget {
                     text: "Continue with Google",
                     icon: LucideIcons.chrome,
                     isSecondary: true,
-                    onPressed: () async {
-                      try {
-                        await ref
-                            .read(authStateProvider.notifier)
-                            .loginWithGoogle();
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Google Login failed: $e")),
-                          );
-                        }
+                    onPressed: () {
+                      // Google Sign-In disabled as per request
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  "Google Sign-In is currently disabled. Please use Email.")),
+                        );
                       }
                     }),
+                const SizedBox(height: 30),
+                GestureDetector(
+                  onTap: () => context.push('/onboarding'),
+                  child: Text(
+                    "Are you new? Click here to make a new account",
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 16,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.white,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

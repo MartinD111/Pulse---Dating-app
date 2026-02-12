@@ -58,6 +58,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboardingRoute = state.uri.toString() == '/onboarding';
 
       if (!isLoggedIn) {
+        if (isOnboardingRoute) return null;
         return isLoginRoute ? null : '/login';
       }
 
