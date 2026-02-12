@@ -31,11 +31,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String _occupation = 'Student'; // 'Student' or 'Employed'
   String _drinkingHabit = 'Occasionally';
   double _introvertScale = 3.0; // 1-5
-  List<String> _lookingFor = [];
-  List<String> _spokenLanguages = [];
+  final List<String> _lookingFor = [];
+  final List<String> _spokenLanguages = [];
 
   // --- Step 3: More Details ---
-  List<String> _selectedHobbies = [];
+  final List<String> _selectedHobbies = [];
   final Map<String, String> _prompts = {}; // prompt question -> answer
 
   void _nextPage() {
@@ -258,7 +258,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 Switch(
                   value: _isSmoker,
                   onChanged: (v) => setState(() => _isSmoker = v),
-                  activeColor: Colors.white,
+                  activeThumbColor: Colors.white,
                 ),
               ],
             ),
@@ -371,8 +371,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   onSelected: (s) {
                     setState(() {
                       if (s) {
-                        if (_spokenLanguages.length < 5)
+                        if (_spokenLanguages.length < 5) {
                           _spokenLanguages.add(option);
+                        }
                       } else {
                         _spokenLanguages.remove(option);
                       }
@@ -589,7 +590,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               const Text("Uspešno ste ustvarili račun.",
                   style: TextStyle(color: Colors.white70)),
               const SizedBox(height: 30),
-              CircularProgressIndicator(color: Colors.white),
+              const CircularProgressIndicator(color: Colors.white),
             ],
           ),
         ),

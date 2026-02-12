@@ -38,9 +38,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           final match = state.extra as MatchProfile?;
           // If match is null, maybe redirect or show error?
           // For now assuming safe
-          if (match == null)
+          if (match == null) {
             return const Scaffold(
                 body: Center(child: Text("Profile not found")));
+          }
           return ProfileDetailScreen(match: match);
         },
       ),

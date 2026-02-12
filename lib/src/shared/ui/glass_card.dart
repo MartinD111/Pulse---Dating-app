@@ -6,6 +6,7 @@ class GlassCard extends StatelessWidget {
   final double opacity;
   final double borderRadius;
   final EdgeInsetsGeometry padding;
+  final Color? borderColor;
 
   const GlassCard({
     super.key,
@@ -13,6 +14,7 @@ class GlassCard extends StatelessWidget {
     this.opacity = 0.2,
     this.borderRadius = 28.0,
     this.padding = const EdgeInsets.all(20),
+    this.borderColor,
   });
 
   @override
@@ -26,7 +28,8 @@ class GlassCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: opacity),
             borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+            border: Border.all(
+                color: borderColor ?? Colors.white.withValues(alpha: 0.3)),
           ),
           child: child,
         ),

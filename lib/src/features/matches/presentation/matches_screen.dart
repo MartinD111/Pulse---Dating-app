@@ -87,7 +87,7 @@ class _MatchesScreenState extends State<MatchesScreen> {
                         children: [
                           Switch(
                             value: match.wantToMatchAgain,
-                            activeColor: Colors.pinkAccent,
+                            activeThumbColor: Colors.pinkAccent,
                             onChanged: (val) {
                               setState(() {
                                 match.wantToMatchAgain = val;

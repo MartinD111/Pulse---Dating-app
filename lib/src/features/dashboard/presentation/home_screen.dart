@@ -8,7 +8,10 @@ import '../../matches/data/match_repository.dart';
 import '../../matches/presentation/match_dialog.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../map/presentation/pulse_map_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../matches/presentation/matches_screen.dart';
+import '../../../shared/ui/primary_button.dart';
+import '../../auth/data/auth_repository.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State

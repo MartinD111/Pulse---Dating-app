@@ -32,7 +32,7 @@ class SettingsScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Prijavljen kot:",
+                          const Text("Prijavljen kot:",
                               style: TextStyle(color: Colors.white70)),
                           if (user.isAdmin)
                             Container(
@@ -41,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                   color: Colors.red,
                                   borderRadius: BorderRadius.circular(4)),
-                              child: Text("ADMIN",
+                              child: const Text("ADMIN",
                                   style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold)),
@@ -50,11 +50,11 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(height: 5),
                       Text("${user.name ?? 'Guest'} (${user.age ?? '?'})",
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 5),
                       Text(user.gender ?? 'Unknown',
-                          style: TextStyle(color: Colors.white60)),
+                          style: const TextStyle(color: Colors.white60)),
                     ],
                   ),
                 ),
@@ -119,7 +119,7 @@ class SettingsScreen extends ConsumerWidget {
                     title: const Text("Admin Mode (Bypass radar)",
                         style: TextStyle(color: Colors.white)),
                     value: user.isAdmin,
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     onChanged: (val) {
                       ref.read(authStateProvider.notifier).updateProfile(
                             user.copyWith(isAdmin: val),
@@ -145,7 +145,7 @@ class SettingsScreen extends ConsumerWidget {
                       ],
                     ),
                     value: user.isPremium,
-                    activeColor: Colors.amber,
+                    activeThumbColor: Colors.amber,
                     onChanged: (val) {
                       ref.read(authStateProvider.notifier).updateProfile(
                             user.copyWith(isPremium: val),
