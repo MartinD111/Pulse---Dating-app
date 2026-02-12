@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 
 class RadarBackground extends StatefulWidget {
   final Widget child;
+  final Color? accentColor;
 
-  const RadarBackground({super.key, required this.child});
+  const RadarBackground({
+    super.key,
+    required this.child,
+    this.accentColor,
+  });
 
   @override
   State<RadarBackground> createState() => _RadarBackgroundState();
@@ -56,6 +61,13 @@ class _RadarBackgroundState extends State<RadarBackground>
 
   @override
   Widget build(BuildContext context) {
+    // Determine base colors based on accentColor
+    final baseColor = widget.accentColor ?? const Color(0xFF1A237E);
+    final secondaryColor = widget.accentColor != null
+        ? widget.accentColor!
+            .withValues(alpha: 0.7) // Use simpler opacity for now
+        : const Color(0xFF4A148C);
+
     return Stack(
       children: [
         // Glassy gradient background
@@ -65,9 +77,12 @@ class _RadarBackgroundState extends State<RadarBackground>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                const Color(0xFF1A237E).withValues(alpha: 0.9), // Deep blue
-                const Color(0xFF4A148C).withValues(alpha: 0.9), // Deep purple
-                const Color(0xFF880E4F).withValues(alpha: 0.9), // Deep pink
+                baseColor.withValues(alpha: 0.9),
+                secondaryColor.withValues(alpha: 0.9),
+                if (widget.accentColor == null)
+                  const Color(0xFF880E4F).withValues(alpha: 0.9)
+                else
+                  baseColor.withValues(alpha: 0.5), // Fallback/third color
               ],
             ),
           ),
@@ -82,6 +97,7 @@ class _RadarBackgroundState extends State<RadarBackground>
                 rotation: _rotationController.value,
                 pulseAnimation: _pulseController,
                 dots: _dots,
+                accentColor: widget.accentColor,
               ),
               size: Size.infinite,
             );
@@ -126,11 +142,13 @@ class RadarPainter extends CustomPainter {
   final double rotation;
   final Animation<double> pulseAnimation;
   final List<PulsingDot> dots;
+  final Color? accentColor;
 
   RadarPainter({
     required this.rotation,
     required this.pulseAnimation,
     required this.dots,
+    this.accentColor,
   }) : super(repaint: pulseAnimation);
 
   @override
@@ -138,24 +156,23 @@ class RadarPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final maxRadius = math.min(size.width, size.height) * 0.8;
 
+    final primaryColor = accentColor ?? Colors.blue;
+    final secondaryColor =
+        accentColor != null ? accentColor!.withValues(alpha: 0.5) : Colors.pink;
+
     // Draw 4 concentric circles with alternating colors
     for (int i = 0; i < 4; i++) {
       final radius = maxRadius * (i + 1) / 4;
-      final isBlue = i % 2 == 0;
+      final isPrimary = i % 2 == 0;
+      final colorToUse = isPrimary ? primaryColor : secondaryColor;
 
       final paint = Paint()
         ..shader = RadialGradient(
-          colors: isBlue
-              ? [
-                  Colors.blue.withValues(alpha: 0.3),
-                  Colors.blue.withValues(alpha: 0.1),
-                  Colors.blue.withValues(alpha: 0.0),
-                ]
-              : [
-                  Colors.pink.withValues(alpha: 0.3),
-                  Colors.pink.withValues(alpha: 0.1),
-                  Colors.pink.withValues(alpha: 0.0),
-                ],
+          colors: [
+            colorToUse.withValues(alpha: 0.3),
+            colorToUse.withValues(alpha: 0.1),
+            colorToUse.withValues(alpha: 0.0),
+          ],
           stops: const [0.0, 0.7, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: radius))
         ..style = PaintingStyle.fill;
@@ -164,7 +181,7 @@ class RadarPainter extends CustomPainter {
 
       // Draw circle outline with glassy effect
       final strokePaint = Paint()
-        ..color = (isBlue ? Colors.blue : Colors.pink).withValues(alpha: 0.4)
+        ..color = colorToUse.withValues(alpha: 0.4)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..maskFilter = const MaskFilter.blur(BlurStyle.outer, 4);
@@ -235,6 +252,7 @@ class RadarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(RadarPainter oldDelegate) {
-    return rotation != oldDelegate.rotation;
+    return rotation != oldDelegate.rotation ||
+        accentColor != oldDelegate.accentColor;
   }
 }

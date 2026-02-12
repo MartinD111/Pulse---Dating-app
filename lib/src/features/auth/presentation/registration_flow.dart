@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../shared/ui/primary_button.dart';
-import '../../../shared/ui/gradient_scaffold.dart';
 import '../data/auth_repository.dart';
 import 'radar_background.dart';
 
@@ -19,7 +19,6 @@ class RegistrationFlow extends ConsumerStatefulWidget {
 
 class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final PageController _pageController = PageController();
-  int _currentPage = 0;
 
   // --- Step 1: Basic Info ---
   final TextEditingController _nameController = TextEditingController();
@@ -70,7 +69,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     Widget content = PageView(
       controller: _pageController,
       physics: const NeverScrollableScrollPhysics(), // Disable swipe
-      onPageChanged: (p) => setState(() => _currentPage = p),
       children: [
         _buildStep1BasicInfo(),
         _buildStep2AboutYou(),
@@ -78,30 +76,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       ],
     );
 
-    // Use RadarBackground for Step 1
-    if (_currentPage == 0) {
-      return Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: RadarBackground(child: content),
-      );
-    } else {
-      // Use GradientScaffold for other steps to maintain consistency or specific theme
-      // For now, let's keep a consistent dark gradient if not strictly gender-themed yet
-      // Or we can use the gender theme if selected.
-      List<Color> gradientColors;
-      if (_selectedGender == 'Moški') {
-        gradientColors = [Colors.blue.shade900, Colors.black];
-      } else if (_selectedGender == 'Ženska') {
-        gradientColors = [Colors.pink.shade900, Colors.black];
-      } else {
-        gradientColors = [const Color(0xFF2E003E), Colors.black]; // Deep Purple
-      }
-
-      return GradientScaffold(
-        gradientColors: gradientColors,
-        child: content,
-      );
+    Color? accentColor;
+    if (_selectedGender == 'Moški') {
+      accentColor = Colors.cyan;
+    } else if (_selectedGender == 'Ženska') {
+      accentColor = Colors.pinkAccent;
     }
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: RadarBackground(
+        accentColor: accentColor,
+        child: content,
+      ),
+    );
   }
 
   Widget _buildStep1BasicInfo() {
@@ -237,9 +225,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           const SizedBox(height: 15),
           Column(
             children: [
-              _buildGenderOption('Moški', LucideIcons.user),
+              _buildGenderOption('Moški', Icons.male),
               const SizedBox(height: 10),
-              _buildGenderOption('Ženska', LucideIcons.user),
+              _buildGenderOption('Ženska', Icons.female),
               const SizedBox(height: 10),
               _buildGenderOption('Ne želim povedati', LucideIcons.userX),
             ],
@@ -584,7 +572,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       runSpacing: 8,
                       children: entry.value.map((hobby) {
                         final isSelected = _selectedHobbies.contains(hobby);
-                        return _buildFilterChip(hobby, isSelected, (s) {
+                        final emoji = _getHobbyEmoji(hobby);
+                        return _buildFilterChip('$emoji $hobby', isSelected,
+                            (s) {
                           setState(() {
                             if (s) {
                               _selectedHobbies.add(hobby);
@@ -686,6 +676,65 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
         ),
       ),
     );
+  }
+
+  String _getHobbyEmoji(String hobby) {
+    bool isFemale = _selectedGender == 'Ženska';
+
+    switch (hobby) {
+      case 'Fitnes':
+        return isFemale ? '🏋️‍♀️' : '🏋️‍♂️';
+      case 'Pilates':
+        return isFemale ? '🧘‍♀️' : '🧘‍♂️';
+      case 'Sprehodi':
+        return isFemale ? '🚶‍♀️' : '🚶‍♂️';
+      case 'Tek':
+        return isFemale ? '🏃‍♀️' : '🏃‍♂️';
+      case 'Smučanje':
+        return '⛷️';
+      case 'Snowboarding':
+        return '🏂';
+      case 'Plezanje':
+        return isFemale ? '🧗‍♀️' : '🧗‍♂️';
+      case 'Plavanje':
+        return isFemale ? '🏊‍♀️' : '🏊‍♂️';
+      case 'Branje':
+        return '📖';
+      case 'Kava':
+        return '☕';
+      case 'Čaj':
+        return '🍵';
+      case 'Kuhanje':
+        return isFemale ? '👩‍🍳' : '👨‍🍳';
+      case 'Filmi':
+        return '🎬';
+      case 'Serije':
+        return '📺';
+      case 'Videoigre':
+        return '🎮';
+      case 'Glasba':
+        return '🎵';
+      case 'Slikanje':
+        return '🎨';
+      case 'Fotografija':
+        return '📸';
+      case 'Pisanje':
+        return '✍️';
+      case 'Muzeji':
+        return '🏛️';
+      case 'Gledališče':
+        return '🎭';
+      case 'Roadtrips':
+        return '🚗';
+      case 'Camping':
+        return '⛺';
+      case 'City breaks':
+        return '🏙️';
+      case 'Backpacking':
+        return '🎒';
+      default:
+        return '✨';
+    }
   }
 
   void _completeRegistration() async {
@@ -794,7 +843,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
     if (mounted) {
       Navigator.of(context).pop(); // Close dialog
-      ref.read(authStateProvider.notifier).completeOnboarding(user);
+      await ref.read(authStateProvider.notifier).completeOnboarding(user);
+      if (mounted) context.go('/');
     }
   }
 
