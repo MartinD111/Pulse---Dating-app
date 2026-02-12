@@ -12,10 +12,32 @@ class SplitBackground extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Container(color: Colors.blue.shade900),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.blue.shade900,
+                      Colors.blue.shade600,
+                    ],
+                  ),
+                ),
+              ),
             ),
             Expanded(
-              child: Container(color: Colors.pink.shade900),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.pink.shade900,
+                      Colors.pink.shade600,
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),

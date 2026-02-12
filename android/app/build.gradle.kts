@@ -38,6 +38,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    // Suppress "source value 8 is obsolete" warnings
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-Xlint:-options")
+    }
 }
 
 flutter {
