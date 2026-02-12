@@ -62,17 +62,17 @@ class PulseMapScreen extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  Colors.pink.shade500.withOpacity(0.8),
-                  Colors.purple.shade500.withOpacity(0.8)
+                  Colors.pink.shade500.withValues(alpha: 0.8),
+                  Colors.purple.shade500.withValues(alpha: 0.8)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border:
-                  Border.all(color: Colors.white.withOpacity(0.5), width: 1),
+              border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5), width: 1),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.pink.withOpacity(0.4),
+                    color: Colors.pink.withValues(alpha: 0.4),
                     blurRadius: 15,
                     spreadRadius: 5),
               ],

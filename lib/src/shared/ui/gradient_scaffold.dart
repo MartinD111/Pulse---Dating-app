@@ -6,6 +6,7 @@ class GradientScaffold extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget? bottomNavigationBar;
   final bool extendBody;
+  final List<Color>? gradientColors;
 
   const GradientScaffold({
     super.key,
@@ -13,6 +14,7 @@ class GradientScaffold extends StatelessWidget {
     this.appBar,
     this.bottomNavigationBar,
     this.extendBody = false,
+    this.gradientColors,
   });
 
   @override
@@ -22,11 +24,12 @@ class GradientScaffold extends StatelessWidget {
       appBar: appBar,
       bottomNavigationBar: bottomNavigationBar,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [PulseTheme.secondaryColor, PulseTheme.primaryColor],
+            colors: gradientColors ??
+                [PulseTheme.secondaryColor, PulseTheme.primaryColor],
           ),
         ),
         child: SafeArea(child: child),

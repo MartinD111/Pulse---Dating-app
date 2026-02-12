@@ -35,8 +35,8 @@ class LoginScreen extends ConsumerWidget {
                 text: "Continue with Google",
                 icon: LucideIcons.chrome,
                 isSecondary: true,
-                onPressed: () {
-                  // TODO: Implement Google Sign In
+                onPressed: () async {
+                  await ref.read(authStateProvider.notifier).loginWithGoogle();
                 }),
           ],
         ),

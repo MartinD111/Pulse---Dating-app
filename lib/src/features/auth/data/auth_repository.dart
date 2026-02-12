@@ -96,6 +96,17 @@ class AuthRepository {
     return _currentUser!;
   }
 
+  Future<AuthUser> loginWithGoogle() async {
+    await Future.delayed(const Duration(seconds: 1)); // Mock delay
+    // In a real app, this would get token from GoogleSignIn
+    _currentUser = const AuthUser(
+      id: 'google_user_456',
+      name: 'Google User',
+      isEmailVerified: true,
+    );
+    return _currentUser!;
+  }
+
   Future<void> updateProfile(AuthUser updatedUser) async {
     await Future.delayed(const Duration(milliseconds: 500));
     if (_currentUser != null) {
@@ -130,6 +141,10 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
 
   Future<void> login(String email, String password) async {
     state = await _repository.loginWithEmail(email, password);
+  }
+
+  Future<void> loginWithGoogle() async {
+    state = await _repository.loginWithGoogle();
   }
 
   Future<void> updateProfile(AuthUser user) async {

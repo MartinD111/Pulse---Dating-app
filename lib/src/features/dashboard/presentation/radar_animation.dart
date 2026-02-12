@@ -74,7 +74,7 @@ class RadarPainter extends CustomPainter {
     final maxRadius = min(size.width, size.height) / 2;
     final paint = Paint()
       ..style = PaintingStyle.stroke
-      ..color = Colors.white.withOpacity(0.3)
+      ..color = Colors.white.withValues(alpha: 0.3)
       ..strokeWidth = 1.0;
 
     // Draw static circles
@@ -89,7 +89,7 @@ class RadarPainter extends CustomPainter {
       ..shader = SweepGradient(
         startAngle: 0.0,
         endAngle: pi / 2,
-        colors: [Colors.transparent, Colors.white.withOpacity(0.8)],
+        colors: [Colors.transparent, Colors.white.withValues(alpha: 0.8)],
         stops: const [0.0, 1.0],
         transform: GradientRotation(value * 2 * pi),
       ).createShader(Rect.fromCircle(center: center, radius: maxRadius));
@@ -106,7 +106,7 @@ class RadarPainter extends CustomPainter {
     final rippleRadius = maxRadius * value;
     final ripplePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..color = Colors.white.withOpacity(1.0 - value)
+      ..color = Colors.white.withValues(alpha: 1.0 - value)
       ..strokeWidth = 2.0;
 
     canvas.drawCircle(center, rippleRadius, ripplePaint);

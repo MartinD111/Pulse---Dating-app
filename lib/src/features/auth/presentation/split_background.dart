@@ -21,7 +21,7 @@ class SplitBackground extends StatelessWidget {
         ),
         // Glass overlay to blend it a bit
         Container(
-          color: Colors.black.withOpacity(0.3),
+          color: Colors.black.withValues(alpha: 0.3),
         ),
         SafeArea(child: child),
       ],

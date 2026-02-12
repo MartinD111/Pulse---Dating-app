@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import '../../../shared/ui/primary_button.dart';
+import '../../../shared/ui/gradient_scaffold.dart';
 import '../data/auth_repository.dart';
 import 'split_background.dart';
 
@@ -21,7 +22,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // --- Step 1: Basic Info ---
   final TextEditingController _nameController = TextEditingController();
   DateTime? _birthDate;
-  final List<String> _photoUrls = []; // Mock photo storage
+  // final List<String> _photoUrls = []; // Mock photo storage
   String? _selectedGender; // 'Male', 'Female', 'Both'
   String _selectedLanguage = 'EN';
 
@@ -72,10 +73,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (_currentPage == 0 && _selectedGender == null) {
       return SplitBackground(child: content);
     } else {
-      // TODO: Wrap with GradientScaffold based on gender
-      return Scaffold(
-        backgroundColor: Colors.black, // Fallback
-        body: SafeArea(child: content),
+      List<Color> gradientColors;
+      if (_selectedGender == 'Male') {
+        gradientColors = [Colors.blue.shade900, Colors.black];
+      } else if (_selectedGender == 'Female') {
+        gradientColors = [Colors.pink.shade900, Colors.black];
+      } else {
+        gradientColors = [Colors.purple.shade900, Colors.black];
+      }
+
+      return GradientScaffold(
+        gradientColors: gradientColors,
+        child: content,
       );
     }
   }

@@ -78,6 +78,6 @@ void onStart(ServiceInstance service) async {
       await NotificationService.showMatchNotification("Ana", 24);
     }
 
-    print('FLUTTER BACKGROUND SERVICE: Scanning...');
+    // print('FLUTTER BACKGROUND SERVICE: Scanning...');
   });
 }

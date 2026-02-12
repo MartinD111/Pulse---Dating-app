@@ -27,9 +27,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
 
-    await ref
-        .read(authStateProvider.notifier)
-        .completeOnboarding(nameCtrl.text, age);
+    final currentUser = ref.read(authStateProvider);
+    if (currentUser == null) return;
+
+    final updatedUser = currentUser.copyWith(
+      name: nameCtrl.text,
+      age: age,
+      isOnboarded: true,
+    );
+
+    await ref.read(authStateProvider.notifier).completeOnboarding(updatedUser);
   }
 
   @override
