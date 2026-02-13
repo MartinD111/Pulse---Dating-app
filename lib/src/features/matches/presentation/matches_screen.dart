@@ -48,14 +48,11 @@ class _MatchesScreenState extends State<MatchesScreen> {
   ];
 
   void _openProfile(BuildContext context, MatchItem item) {
-    // Convert MatchItem to MatchProfile
-    // In a real app, you might fetch full details by ID or have them already.
     final profile = MatchProfile(
-      id: item.name, // Use name as mock ID
+      id: item.name,
       name: item.name,
       age: item.age,
       imageUrl: item.imageUrl,
-      // Provide generic mock details for now since MatchItem doesn't have them
       bio: item.name == "Eva"
           ? "Uživam v dobri kavi, sprehodih v naravi in spontanih izletih. Vedno za akcijo!"
           : "Rada potujem in spoznavam nove ljudi. Vedno za kavo in dober pogovor.",
@@ -66,9 +63,15 @@ class _MatchesScreenState extends State<MatchesScreen> {
       company: item.name == "Eva" ? "Freelance" : null,
       school: item.name == "Eva" ? "ALUO" : "Filozofska fakulteta",
       isSmoker: false,
-      isDrinker: true,
+      drinkingHabit: 'Družabno',
       introvertLevel: item.name == "Ana" ? 2 : 4,
-      gender: 'Female', // Mock assumption
+      gender: 'Female',
+      exerciseHabit: 'Včasih',
+      sleepSchedule: item.name == "Eva" ? 'Nočna ptica' : 'Jutranja ptica',
+      petPreference: item.name == "Eva" ? 'Cat person' : 'Dog person',
+      lookingFor: item.name == "Eva"
+          ? ['Dolgoročno razmerje', 'Prijateljstvo']
+          : ['Kratkoročna zabava'],
       prompts: [
         {
           'question': 'Moj idealen zmenek...',

@@ -13,7 +13,19 @@ class SettingsScreen extends ConsumerStatefulWidget {
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with AutomaticKeepAliveClientMixin {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   void _showAddHobbyDialog(BuildContext context, AuthUser user) {
     final nameController = TextEditingController();
     final emojiController = TextEditingController();
@@ -82,8 +94,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  void _updateProfile(AuthUser updatedUser) {
+    // Save scroll position before update
+    final offset =
+        _scrollController.hasClients ? _scrollController.offset : 0.0;
+    ref.read(authStateProvider.notifier).updateProfile(updatedUser);
+    // Restore scroll position after rebuild
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(offset);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final user = ref.watch(authStateProvider);
 
     if (user == null) return const SizedBox.shrink();
@@ -93,7 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 60), // More top spacing
+          const SizedBox(height: 60),
           Text("Nastavitve",
               style: GoogleFonts.outfit(
                   fontSize: 32,
@@ -102,29 +128,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 20),
           Expanded(
             child: SingleChildScrollView(
+              controller: _scrollController,
               padding: const EdgeInsets.only(bottom: 100),
               child: Column(
                 children: [
-                  // TOP: Profile Section
                   _buildProfileSection(user),
                   const SizedBox(height: 20),
-
-                  // THEME & APP SETTINGS
                   _buildAppSettingsSection(user),
                   const SizedBox(height: 20),
-
-                  // PREFERENCES
                   _buildPreferencesSection(user),
                   const SizedBox(height: 20),
-
-                  // ACCOUNT SETTINGS
+                  _buildLifestyleSection(user),
+                  const SizedBox(height: 20),
                   _buildAccountSection(user),
                   const SizedBox(height: 20),
-
-                  // PREMIUM
                   _buildPremiumSection(user),
                   const SizedBox(height: 30),
-
                   PrimaryButton(
                       text: "Odjava",
                       isSecondary: true,
@@ -144,7 +163,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return GlassCard(
       child: Column(
         children: [
-          // Profile Pic
           CircleAvatar(
             radius: 50,
             backgroundColor: Colors.white24,
@@ -158,29 +176,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 : null,
           ),
           const SizedBox(height: 15),
-
-          // Name & Age
           Text("${user.name ?? 'Guest'}, ${user.age ?? '?'}",
               style: GoogleFonts.outfit(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
           const SizedBox(height: 15),
-
-          // Hobbies
+          // Hobbies with emoji icons
           Wrap(
             spacing: 8,
             runSpacing: 8,
             alignment: WrapAlignment.center,
             children: [
-              ...user.hobbies.map((h) => Chip(
-                    label: Text(h, style: const TextStyle(color: Colors.white)),
-                    backgroundColor: Colors.white24,
-                    side: BorderSide.none,
-                    shape: const StadiumBorder(),
-                  )),
-
-              // Add Hobby Button
+              ...user.hobbies.map((h) {
+                final emoji = _getHobbyEmoji(h, user.gender);
+                final displayText = '$emoji $h';
+                return Chip(
+                  label: Text(displayText,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w500)),
+                  backgroundColor: Colors.black54,
+                  side: const BorderSide(color: Colors.white24),
+                  shape: const StadiumBorder(),
+                );
+              }),
               ActionChip(
                 label: const Icon(Icons.add, color: Colors.white, size: 18),
                 backgroundColor: Colors.pinkAccent.withValues(alpha: 0.5),
@@ -213,9 +232,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             activeTrackColor: Colors.grey[800],
             inactiveTrackColor: Colors.white24,
             onChanged: (val) {
-              ref
-                  .read(authStateProvider.notifier)
-                  .updateProfile(user.copyWith(isDarkMode: val));
+              _updateProfile(user.copyWith(isDarkMode: val));
             },
           ),
           if (user.interestedIn == 'Oba' || user.interestedIn == 'Both')
@@ -228,9 +245,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               activeTrackColor: Colors.purple.withValues(alpha: 0.5),
               inactiveTrackColor: Colors.white24,
               onChanged: (val) {
-                ref
-                    .read(authStateProvider.notifier)
-                    .updateProfile(user.copyWith(isPrideMode: val));
+                _updateProfile(user.copyWith(isPrideMode: val));
               },
             ),
         ],
@@ -271,12 +286,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               user.ageRangeEnd.toString(),
             ),
             onChanged: (RangeValues values) {
-              ref.read(authStateProvider.notifier).updateProfile(
-                    user.copyWith(
-                      ageRangeStart: values.start.round(),
-                      ageRangeEnd: values.end.round(),
-                    ),
-                  );
+              _updateProfile(user.copyWith(
+                ageRangeStart: values.start.round(),
+                ageRangeEnd: values.end.round(),
+              ));
             },
           ),
           const SizedBox(height: 20),
@@ -308,36 +321,55 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 selected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    ref
-                        .read(authStateProvider.notifier)
-                        .updateProfile(user.copyWith(interestedIn: label));
+                    _updateProfile(user.copyWith(interestedIn: label));
                   }
                 },
                 selectedColor: Colors.white,
-                backgroundColor: Colors.white10,
+                backgroundColor: Colors.black54,
                 labelStyle:
                     TextStyle(color: isSelected ? Colors.black : Colors.white),
-                shape: const StadiumBorder(side: BorderSide.none),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
                 showCheckmark: false,
               );
             }).toList(),
           ),
           const SizedBox(height: 20),
 
-          // Partner Habits
-          const Text("Moje preference", style: TextStyle(color: Colors.white)),
+          // Partner Smoking - Pill shaped selector
+          const Text("Partner kadi?", style: TextStyle(color: Colors.white)),
           const SizedBox(height: 10),
-
-          // Smoking
-          _buildDropdownPreference(
-              "Partner kadi?",
-              user.partnerSmokingPreference ?? 'Vseeno',
-              ['Ne', 'Da', 'Vseeno'],
-              (val) => ref
-                  .read(authStateProvider.notifier)
-                  .updateProfile(user.copyWith(partnerSmokingPreference: val))),
-
-          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            children: ['Ne', 'Vseeno'].map((option) {
+              final isSelected =
+                  (user.partnerSmokingPreference ?? 'Vseeno') == option;
+              return ChoiceChip(
+                label: Text(option),
+                selected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(
+                        user.copyWith(partnerSmokingPreference: option));
+                  }
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
 
           // Introvert/Extrovert
           const Text("Tip osebnosti (Introvert/Ekstrovert)",
@@ -351,9 +383,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             inactiveColor: Colors.white24,
             label: _getIntrovertLabel(user.introvertScale ?? 3),
             onChanged: (val) {
-              ref
-                  .read(authStateProvider.notifier)
-                  .updateProfile(user.copyWith(introvertScale: val.round()));
+              _updateProfile(user.copyWith(introvertScale: val.round()));
             },
           ),
           Center(
@@ -361,6 +391,154 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _getIntrovertLabel(user.introvertScale ?? 3),
               style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLifestyleSection(AuthUser user) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text("Življenjski slog",
+              style: TextStyle(
+                  color: Colors.white70, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 20),
+
+          // Exercise
+          const Text("Telovadba", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ['Ne', 'Včasih', 'Redno', 'Zelo aktiven'].map((option) {
+              final isSelected = (user.exerciseHabit ?? 'Včasih') == option;
+              return ChoiceChip(
+                label: Text(option),
+                selected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(user.copyWith(exerciseHabit: option));
+                  }
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+
+          // Alcohol
+          const Text("Alkohol", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: ['Nikoli', 'Družabno', 'Ob priliki'].map((option) {
+              final isSelected = (user.drinkingHabit ?? 'Družabno') == option;
+              return ChoiceChip(
+                label: Text(option),
+                selected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(user.copyWith(drinkingHabit: option));
+                  }
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+
+          // Sleep Schedule
+          const Text("Spanje", style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            children: ['Nočna ptica', 'Jutranja ptica'].map((option) {
+              final isSelected =
+                  (user.sleepSchedule ?? 'Nočna ptica') == option;
+              return ChoiceChip(
+                avatar: Icon(
+                  option == 'Nočna ptica' ? LucideIcons.moon : LucideIcons.sun,
+                  size: 16,
+                  color: isSelected ? Colors.black : Colors.white,
+                ),
+                label: Text(option),
+                selected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(user.copyWith(sleepSchedule: option));
+                  }
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+
+          // Dog/Cat Person
+          const Text("Hišni ljubljenčki",
+              style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            children: ['Dog person 🐶', 'Cat person 🐱'].map((option) {
+              final val =
+                  option.startsWith('Dog') ? 'Dog person' : 'Cat person';
+              final isSelected = (user.petPreference ?? 'Dog person') == val;
+              return ChoiceChip(
+                label: Text(option),
+                selected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(user.copyWith(petPreference: val));
+                  }
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -376,30 +554,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return "";
   }
 
-  Widget _buildDropdownPreference(String title, String currentValue,
-      List<String> options, Function(String) onChanged) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: const TextStyle(color: Colors.white70)),
-        DropdownButton<String>(
-          value: options.contains(currentValue) ? currentValue : options.last,
-          dropdownColor: Colors.grey[900],
-          style: const TextStyle(color: Colors.white),
-          underline: Container(height: 1, color: Colors.white54),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-          items: options.map((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
-            );
-          }).toList(),
-          onChanged: (val) => val != null ? onChanged(val) : null,
-        ),
-      ],
-    );
-  }
-
   Widget _buildAccountSection(AuthUser user) {
     return GlassCard(
       child: Column(
@@ -409,8 +563,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               style: TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-
-          // Email Verification Status
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(
@@ -428,9 +580,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             trailing: !user.isEmailVerified
                 ? TextButton(
                     onPressed: () {
-                      ref.read(authStateProvider.notifier).updateProfile(
-                            user.copyWith(isEmailVerified: true),
-                          );
+                      _updateProfile(user.copyWith(isEmailVerified: true));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Email verificiran!")),
                       );
@@ -439,10 +589,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   )
                 : null,
           ),
-
           Divider(color: Colors.white.withValues(alpha: 0.1)),
-
-          // Admin Mode
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text("Admin Mode (Bypass radar)",
@@ -452,9 +599,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
             inactiveTrackColor: Colors.white24,
             onChanged: (val) {
-              ref.read(authStateProvider.notifier).updateProfile(
-                    user.copyWith(isAdmin: val),
-                  );
+              _updateProfile(user.copyWith(isAdmin: val));
             },
           ),
         ],
@@ -480,11 +625,74 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         activeTrackColor: Colors.amber.withValues(alpha: 0.5),
         inactiveTrackColor: Colors.white24,
         onChanged: (val) {
-          ref.read(authStateProvider.notifier).updateProfile(
-                user.copyWith(isPremium: val),
-              );
+          _updateProfile(user.copyWith(isPremium: val));
         },
       ),
     );
+  }
+
+  String _getHobbyEmoji(String hobby, String? gender) {
+    bool isFemale = gender == 'Ženska';
+    // Strip any existing emoji prefix (custom hobbies may already have one)
+    final cleanHobby = hobby
+        .replaceAll(
+            RegExp(r'^[\p{So}\p{Cn}\p{Sk}\p{Sm}]+\s*', unicode: true), '')
+        .trim();
+    switch (cleanHobby) {
+      case 'Fitnes':
+        return isFemale ? '🏋️‍♀️' : '🏋️‍♂️';
+      case 'Pilates':
+        return isFemale ? '🧘‍♀️' : '🧘‍♂️';
+      case 'Sprehodi':
+        return isFemale ? '🚶‍♀️' : '🚶‍♂️';
+      case 'Tek':
+        return isFemale ? '🏃‍♀️' : '🏃‍♂️';
+      case 'Smučanje':
+        return '⛷️';
+      case 'Snowboarding':
+        return '🏂';
+      case 'Plezanje':
+        return isFemale ? '🧗‍♀️' : '🧗‍♂️';
+      case 'Plavanje':
+        return isFemale ? '🏊‍♀️' : '🏊‍♂️';
+      case 'Branje':
+        return '📖';
+      case 'Kava':
+        return '☕';
+      case 'Čaj':
+        return '🍵';
+      case 'Kuhanje':
+        return isFemale ? '👩‍🍳' : '👨‍🍳';
+      case 'Filmi':
+        return '🎬';
+      case 'Serije':
+        return '📺';
+      case 'Videoigre':
+        return '🎮';
+      case 'Glasba':
+        return '🎵';
+      case 'Slikanje':
+        return '🎨';
+      case 'Fotografija':
+        return '📸';
+      case 'Pisanje':
+        return '✍️';
+      case 'Muzeji':
+        return '🏛️';
+      case 'Gledališče':
+        return '🎭';
+      case 'Roadtrips':
+        return '🚗';
+      case 'Camping':
+        return '⛺';
+      case 'City breaks':
+        return '🏙️';
+      case 'Backpacking':
+        return '🎒';
+      case 'Bordanje':
+        return '🏂';
+      default:
+        return '✨';
+    }
   }
 }

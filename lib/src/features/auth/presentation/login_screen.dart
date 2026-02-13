@@ -48,6 +48,12 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
+                const SizedBox(height: 8),
+                Text("Meet people like people",
+                    style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: Colors.white60,
+                        letterSpacing: 1.5)),
                 const SizedBox(height: 50),
 
                 // Email Input

@@ -22,6 +22,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // --- Step 1: Basic Info ---
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   DateTime? _birthDate;
   final List<File?> _photos = [null, null, null, null];
   final ImagePicker _picker = ImagePicker();
@@ -32,10 +34,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _interestedIn;
   bool _isSmoker = false;
   String _occupation = 'Študent'; // 'Študent' or 'Zaposlen'
-  String _drinkingHabit = 'Občasno';
+  String _drinkingHabit = 'Družabno';
   double _introvertScale = 3.0; // 1-5
   final List<String> _lookingFor = [];
   final List<String> _spokenLanguages = [];
+  String _exerciseHabit = 'Včasih';
+  String _sleepSchedule = 'Nočna ptica';
+  String _petPreference = 'Dog person';
 
   // --- Step 3: More Details ---
   final List<String> _selectedHobbies = [];
@@ -74,6 +79,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       physics: const NeverScrollableScrollPhysics(), // Disable swipe
       children: [
         _buildStep1BasicInfo(),
+        _buildStep1bPhotosGender(),
         _buildStep2AboutYou(),
         _buildStep3MoreDetails(),
       ],
@@ -99,12 +105,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center, // Center eveything
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Placeholder for alignment or back button if needed
               const SizedBox(width: 48),
               Text("Osnovni podatki",
                   style: GoogleFonts.outfit(
@@ -169,6 +174,75 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               ),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Email
+          TextField(
+            controller: _emailController,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              labelStyle: TextStyle(color: Colors.white70),
+              alignLabelWithHint: true,
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70)),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white)),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Password
+          TextField(
+            controller: _passwordController,
+            textAlign: TextAlign.center,
+            obscureText: true,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: const InputDecoration(
+              labelText: 'Geslo',
+              labelStyle: TextStyle(color: Colors.white70),
+              alignLabelWithHint: true,
+              enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70)),
+              focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white)),
+            ),
+          ),
+
+          const Spacer(),
+          PrimaryButton(
+            text: "Naprej",
+            onPressed: () {
+              if (_nameController.text.isNotEmpty &&
+                  _birthDate != null &&
+                  _emailController.text.isNotEmpty &&
+                  _passwordController.text.isNotEmpty) {
+                _nextPage();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Prosim izpolni vsa polja")),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep1bPhotosGender() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text("Slike & Spol",
+              style: GoogleFonts.outfit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
           const SizedBox(height: 30),
 
           // Photos (1-4)
@@ -220,7 +294,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               );
             }),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 40),
 
           // Gender Selection
           Text("Spol",
@@ -235,21 +309,62 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
               _buildGenderOption('Ne želim povedati', LucideIcons.userX),
             ],
           ),
+          // Warning for 'Ne želim povedati'
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _selectedGender == 'Ne želim povedati'
+                ? Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: Colors.amber.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(LucideIcons.alertTriangle,
+                            color: Colors.amber, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            "Opomba: Matchani boste samo z osebami, ki iščejo spol \"Oba\".",
+                            style: TextStyle(
+                                color: Colors.amber.shade200, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
 
           const Spacer(),
-          PrimaryButton(
-            text: "Naprej",
-            onPressed: () {
-              if (_nameController.text.isNotEmpty &&
-                  _birthDate != null &&
-                  _selectedGender != null) {
-                _nextPage();
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Prosim izpolni vsa polja")),
-                );
-              }
-            },
+          Row(
+            children: [
+              TextButton(
+                onPressed: _prevPage,
+                child: const Text("Nazaj",
+                    style: TextStyle(color: Colors.white70, fontSize: 16)),
+              ),
+              const Spacer(),
+              PrimaryButton(
+                text: "Naprej",
+                width: 120,
+                onPressed: () {
+                  if (_selectedGender != null) {
+                    _nextPage();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Prosim izberi spol")),
+                    );
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),
@@ -395,12 +510,50 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _buildSectionLabel("Alkohol", LucideIcons.beer),
             Wrap(
               spacing: 10,
-              children: ['Nikoli', 'Občasno', 'Redno'].map((option) {
+              children: ['Nikoli', 'Družabno', 'Ob priliki'].map((option) {
                 return _buildChoiceChip(option, _drinkingHabit == option,
                     (s) => setState(() => _drinkingHabit = option));
               }).toList(),
             ),
             const SizedBox(height: 25),
+
+            // Exercise
+            _buildSectionLabel("Telovadba", LucideIcons.dumbbell),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: ['Ne', 'Včasih', 'Redno', 'Zelo aktiven'].map((option) {
+                return _buildChoiceChip(option, _exerciseHabit == option,
+                    (s) => setState(() => _exerciseHabit = option));
+              }).toList(),
+            ),
+            const SizedBox(height: 25),
+
+            // Sleep Schedule
+            _buildSectionLabel("Spanje", LucideIcons.moon),
+            Wrap(
+              spacing: 10,
+              children: ['Nočna ptica', 'Jutranja ptica'].map((option) {
+                return _buildChoiceChip(option, _sleepSchedule == option,
+                    (s) => setState(() => _sleepSchedule = option),
+                    icon: option == 'Nočna ptica'
+                        ? LucideIcons.moon
+                        : LucideIcons.sun);
+              }).toList(),
+            ),
+            const SizedBox(height: 25),
+
+            // Dog/Cat Person
+            _buildSectionLabel("Hišni ljubljenčki", LucideIcons.heart),
+            Wrap(
+              spacing: 10,
+              children: ['Dog person 🐶', 'Cat person 🐱'].map((option) {
+                final val =
+                    option.startsWith('Dog') ? 'Dog person' : 'Cat person';
+                return _buildChoiceChip(option, _petPreference == val,
+                    (s) => setState(() => _petPreference = val));
+              }).toList(),
+            ),
 
             // Introvert/Extrovert Slider
             _buildSectionLabel("Introvert / Ekstrovert", LucideIcons.users),
@@ -616,13 +769,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 30),
 
             // Hobbies Categories
-            _buildSectionLabel("Hobiji", LucideIcons.gamepad2),
+            _buildSectionLabel("Hobiji (${_selectedHobbies.length} izbranih)",
+                LucideIcons.gamepad2),
             ...hobbyCategories.entries.map((entry) {
               return Theme(
                 data: Theme.of(context)
                     .copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
-                  title: Text(entry.key,
+                  title: Text(
+                      '${entry.key} (${entry.value.where((h) => _selectedHobbies.contains(h)).length})',
                       style: const TextStyle(color: Colors.white)),
                   collapsedIconColor: Colors.white,
                   iconColor: Colors.white,
@@ -885,6 +1040,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     final user = AuthUser(
       id: 'generated_id',
       name: _nameController.text,
+      email: _emailController.text,
+      password: _passwordController.text,
       age: (DateTime.now().difference(_birthDate!).inDays / 365).floor(),
       birthDate: _birthDate,
       gender: _selectedGender,
@@ -893,6 +1050,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       occupation: _occupation,
       drinkingHabit: _drinkingHabit,
       introvertScale: _introvertScale.round(),
+      exerciseHabit: _exerciseHabit,
+      sleepSchedule: _sleepSchedule,
+      petPreference: _petPreference,
       lookingFor: _lookingFor,
       languages: _spokenLanguages,
       hobbies: _selectedHobbies,

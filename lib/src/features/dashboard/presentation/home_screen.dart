@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -16,6 +17,9 @@ import '../../auth/data/auth_repository.dart';
 
 final isScanningProvider =
     StateProvider<bool>((ref) => false); // Manual Toggle State
+
+// Simulates match ping distance (1.0 = edge, 0.0 = center, null = no ping)
+final pingDistanceProvider = StateProvider<double?>((ref) => null);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -54,6 +58,7 @@ class HomeScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider);
     final navIndex = ref.watch(navIndexProvider);
     final isScanning = ref.watch(isScanningProvider);
+    final pingDistance = ref.watch(pingDistanceProvider);
     final bool canAccessRadar =
         user?.isEmailVerified == true || user?.isAdmin == true;
     final bool isPremium = user?.isPremium == true;
@@ -64,7 +69,8 @@ class HomeScreen extends ConsumerWidget {
 
     if (isPremium) {
       screens = [
-        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium),
+        _buildRadarView(
+            ref, context, canAccessRadar, isScanning, isPremium, pingDistance),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -77,7 +83,8 @@ class HomeScreen extends ConsumerWidget {
       ];
     } else {
       screens = [
-        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium),
+        _buildRadarView(
+            ref, context, canAccessRadar, isScanning, isPremium, pingDistance),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -131,8 +138,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildRadarView(WidgetRef ref, BuildContext context,
-      bool canAccessRadar, bool isScanning, bool isPremium) {
+  Widget _buildRadarView(
+      WidgetRef ref,
+      BuildContext context,
+      bool canAccessRadar,
+      bool isScanning,
+      bool isPremium,
+      double? pingDistance) {
     return Stack(
       children: [
         // Radar View (Conditional)
@@ -140,7 +152,11 @@ class HomeScreen extends ConsumerWidget {
             ? Stack(
                 children: [
                   Positioned.fill(
-                      child: RadarAnimation(isScanning: isScanning)),
+                      child: RadarAnimation(
+                    isScanning: isScanning,
+                    pingDistance: pingDistance,
+                    pingAngle: pi / 4,
+                  )),
                   Center(
                     child: GestureDetector(
                       onTap: () {

@@ -10,15 +10,24 @@ class AuthUser {
   final String? gender; // 'Moški', 'Ženska', 'Oba' (or english)
   final String? interestedIn; // 'Moški', 'Ženska', 'Oba'
 
+  // Auth fields
+  final String? email;
+  final String? password;
+
   // New Preferences
   final bool? isSmoker; // User's status
-  final String? partnerSmokingPreference; // 'No', 'Yes', 'Idc'
+  final String? partnerSmokingPreference; // 'Ne', 'Vseeno'
 
   final String? occupation; // 'Student', 'Employed'
-  final String? drinkingHabit; // 'Never', 'Occasionally', 'Regularly'
+  final String? drinkingHabit; // 'Nikoli', 'Družabno', 'Ob priliki'
 
   final int? introvertScale; // User's scale 1-5
   final String? partnerIntrovertPreference; // 'Introvert', 'Extrovert', 'Idc'
+
+  // Lifestyle
+  final String? exerciseHabit; // 'Včasih', 'Ne', 'Redno', 'Zelo aktiven'
+  final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
+  final String? petPreference; // 'Dog person', 'Cat person'
 
   final List<String> lookingFor; // 'Short-term', 'Long-term', etc.
   final List<String> languages;
@@ -40,6 +49,8 @@ class AuthUser {
     this.name,
     this.age,
     this.birthDate,
+    this.email,
+    this.password,
     this.photoUrls = const [],
     this.gender,
     this.interestedIn,
@@ -49,6 +60,9 @@ class AuthUser {
     this.drinkingHabit,
     this.introvertScale,
     this.partnerIntrovertPreference,
+    this.exerciseHabit,
+    this.sleepSchedule,
+    this.petPreference,
     this.lookingFor = const [],
     this.languages = const [],
     this.hobbies = const [],
@@ -68,6 +82,8 @@ class AuthUser {
     String? name,
     int? age,
     DateTime? birthDate,
+    String? email,
+    String? password,
     List<String>? photoUrls,
     String? gender,
     String? interestedIn,
@@ -77,6 +93,9 @@ class AuthUser {
     String? drinkingHabit,
     int? introvertScale,
     String? partnerIntrovertPreference,
+    String? exerciseHabit,
+    String? sleepSchedule,
+    String? petPreference,
     List<String>? lookingFor,
     List<String>? languages,
     List<String>? hobbies,
@@ -95,6 +114,8 @@ class AuthUser {
       name: name ?? this.name,
       age: age ?? this.age,
       birthDate: birthDate ?? this.birthDate,
+      email: email ?? this.email,
+      password: password ?? this.password,
       photoUrls: photoUrls ?? this.photoUrls,
       gender: gender ?? this.gender,
       interestedIn: interestedIn ?? this.interestedIn,
@@ -106,6 +127,9 @@ class AuthUser {
       introvertScale: introvertScale ?? this.introvertScale,
       partnerIntrovertPreference:
           partnerIntrovertPreference ?? this.partnerIntrovertPreference,
+      exerciseHabit: exerciseHabit ?? this.exerciseHabit,
+      sleepSchedule: sleepSchedule ?? this.sleepSchedule,
+      petPreference: petPreference ?? this.petPreference,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,

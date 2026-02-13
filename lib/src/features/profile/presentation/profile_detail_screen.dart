@@ -14,11 +14,8 @@ class ProfileDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GradientScaffold(
-      floatingActionButton: _buildActionButtons(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       child: Stack(
         children: [
-          // Custom Scroll View for parallax/scroll effects
           CustomScrollView(
             slivers: [
               _buildSliverAppBar(context),
@@ -31,6 +28,12 @@ class ProfileDetailScreen extends StatelessWidget {
                       // Bio Section
                       _buildBioSection(),
                       const SizedBox(height: 20),
+
+                      // What they're looking for
+                      if (match.lookingFor.isNotEmpty) ...[
+                        _buildLookingForSection(),
+                        const SizedBox(height: 20),
+                      ],
 
                       // Basic Info (Job, School, etc.)
                       _buildInfoBadges(),
@@ -54,7 +57,7 @@ class ProfileDetailScreen extends StatelessWidget {
                       if (match.introvertLevel != null)
                         _buildPersonalitySection(context),
 
-                      const SizedBox(height: 80), // Bottom padding for FAB
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -95,7 +98,6 @@ class ProfileDetailScreen extends StatelessWidget {
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => Container(color: Colors.grey[900]),
             ),
-            // Gradient Overlay
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -110,7 +112,6 @@ class ProfileDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
-            // Name & Age on top of image
             Positioned(
               bottom: 20,
               left: 20,
@@ -190,8 +191,49 @@ class ProfileDetailScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildLookingForSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Iščem",
+            style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: match.lookingFor
+              .map((item) => Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.pinkAccent.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: Colors.pinkAccent.withValues(alpha: 0.5)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.heart,
+                            size: 14, color: Colors.pinkAccent),
+                        const SizedBox(width: 6),
+                        Text(item,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildInfoBadges() {
-    // Collect all simple attributes in a wrap
     final items = <Widget>[];
 
     void addBadge(IconData icon, String text, [Color? color]) {
@@ -219,7 +261,6 @@ class ProfileDetailScreen extends StatelessWidget {
     if (match.school != null) {
       addBadge(LucideIcons.graduationCap, match.school!);
     }
-    // Location mock (if we had it)
     addBadge(LucideIcons.mapPin, "Ljubljana, 2km", Colors.pinkAccent);
 
     return Wrap(
@@ -288,13 +329,26 @@ class ProfileDetailScreen extends StatelessWidget {
       habits.add(buildHabitItem(
           LucideIcons.cigarette, "Kajenje", match.isSmoker! ? "Da" : "Ne"));
     }
-    if (match.isDrinker != null) {
-      habits.add(buildHabitItem(
-          LucideIcons.wine, "Alkohol", match.isDrinker! ? "Družabno" : "Ne"));
+    if (match.drinkingHabit != null) {
+      habits.add(
+          buildHabitItem(LucideIcons.wine, "Alkohol", match.drinkingHabit!));
     }
-    // Mock others
-    habits.add(buildHabitItem(LucideIcons.dumbbell, "Telovadba", "Včasih"));
-    habits.add(buildHabitItem(LucideIcons.moon, "Spanje", "Nočna ptica"));
+    if (match.exerciseHabit != null) {
+      habits.add(buildHabitItem(
+          LucideIcons.dumbbell, "Telovadba", match.exerciseHabit!));
+    }
+    if (match.sleepSchedule != null) {
+      habits.add(
+          buildHabitItem(LucideIcons.moon, "Spanje", match.sleepSchedule!));
+    }
+    if (match.petPreference != null) {
+      habits.add(buildHabitItem(
+          LucideIcons.heart,
+          "Ljubljenčki",
+          match.petPreference == 'Dog person'
+              ? '🐶 Dog person'
+              : '🐱 Cat person'));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,10 +389,11 @@ class ProfileDetailScreen extends StatelessWidget {
           runSpacing: 10,
           children: match.hobbies
               .map((h) => Chip(
-                    label: Text(h, style: const TextStyle(color: Colors.white)),
-                    backgroundColor: Colors.white24,
-                    side:
-                        BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                    label: Text(h,
+                        style: const TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.w500)),
+                    backgroundColor: Colors.black54,
+                    side: const BorderSide(color: Colors.white24),
                     shape: const StadiumBorder(),
                     padding: const EdgeInsets.all(4),
                   ))
@@ -349,7 +404,6 @@ class ProfileDetailScreen extends StatelessWidget {
   }
 
   Widget _buildPersonalitySection(BuildContext context) {
-    // 1 = Introvert, 5 = Extrovert
     final val = match.introvertLevel!.toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,52 +438,13 @@ class ProfileDetailScreen extends StatelessWidget {
                   min: 1,
                   max: 5,
                   divisions: 4,
-                  onChanged: null, // Read-only
+                  onChanged: null,
                 ),
               ),
             ],
           ),
         )
       ],
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _circleButton(LucideIcons.x, Colors.redAccent, () {}),
-          _circleButton(LucideIcons.star, Colors.blueAccent, () {},
-              small: true),
-          _circleButton(LucideIcons.heart, Colors.greenAccent, () {}),
-        ],
-      ),
-    );
-  }
-
-  Widget _circleButton(IconData icon, Color color, VoidCallback onTap,
-      {bool small = false}) {
-    final size = small ? 50.0 : 65.0;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 20,
-            spreadRadius: 5,
-          )
-        ],
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: color, size: size * 0.5),
-        onPressed: onTap,
-      ),
     );
   }
 }
