@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,6 +25,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+  bool _obscurePassword = true;
+  double _passwordStrength = 0.0;
+  String _passwordStrengthLabel = '';
+  Color _passwordStrengthColor = Colors.red;
+  bool _hasMinLength = false;
+  bool _hasUppercase = false;
+  bool _hasDigit = false;
+  bool _hasSpecialChar = false;
   DateTime? _birthDate;
   final List<File?> _photos = [null, null, null, null];
   final ImagePicker _picker = ImagePicker();
@@ -48,6 +58,57 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // New state
   RangeValues _ageRange = const RangeValues(20, 30);
+
+  void _updatePasswordStrength(String password) {
+    _hasMinLength = password.length >= 8;
+    _hasUppercase = password.contains(RegExp(r'[A-Z]'));
+    _hasDigit = password.contains(RegExp(r'[0-9]'));
+    _hasSpecialChar =
+        password.contains(RegExp(r'[!@#%^&*()_+\-=\[\]{};:,.<>?/\\|`~]'));
+
+    int score = 0;
+    if (_hasMinLength) score++;
+    if (_hasUppercase) score++;
+    if (_hasDigit) score++;
+    if (_hasSpecialChar) score++;
+    if (password.length >= 12) score++;
+    if (password.length >= 16) score++;
+    if (password.contains(RegExp(r'[a-z]'))) score++;
+
+    double strength = math.min(score / 5.0, 1.0);
+    if (password.isEmpty) strength = 0.0;
+
+    String label;
+    Color color;
+    if (strength == 0) {
+      label = '';
+      color = Colors.red;
+    } else if (strength < 0.3) {
+      label = 'Zelo šibko';
+      color = Colors.red;
+    } else if (strength < 0.5) {
+      label = 'Šibko';
+      color = Colors.orange;
+    } else if (strength < 0.7) {
+      label = 'Srednje';
+      color = Colors.amber;
+    } else if (strength < 0.9) {
+      label = 'Močno';
+      color = Colors.lightGreen;
+    } else {
+      label = 'Zelo močno';
+      color = Colors.green;
+    }
+
+    setState(() {
+      _passwordStrength = strength;
+      _passwordStrengthLabel = label;
+      _passwordStrengthColor = color;
+    });
+  }
+
+  bool get _isPasswordValid =>
+      _hasMinLength && _hasUppercase && _hasDigit && _hasSpecialChar;
 
   void _nextPage() {
     _pageController.nextPage(
@@ -194,36 +255,147 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           ),
           const SizedBox(height: 20),
 
-          // Password
+          // Location
           TextField(
-            controller: _passwordController,
+            controller: _locationController,
             textAlign: TextAlign.center,
-            obscureText: true,
             style: const TextStyle(color: Colors.white, fontSize: 18),
             decoration: const InputDecoration(
-              labelText: 'Geslo',
+              labelText: 'Iz kje sem',
               labelStyle: TextStyle(color: Colors.white70),
               alignLabelWithHint: true,
+              prefixIcon:
+                  Icon(LucideIcons.mapPin, color: Colors.white54, size: 20),
               enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.white70)),
               focusedBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Colors.white)),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // Password
+          TextField(
+            controller: _passwordController,
+            textAlign: TextAlign.center,
+            obscureText: _obscurePassword,
+            onChanged: _updatePasswordStrength,
+            style: const TextStyle(color: Colors.white, fontSize: 18),
+            decoration: InputDecoration(
+              labelText: 'Geslo',
+              labelStyle: const TextStyle(color: Colors.white70),
+              alignLabelWithHint: true,
+              enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white70)),
+              focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white)),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye,
+                  color: Colors.white54,
+                  size: 20,
+                ),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Password Strength Bar & Requirements
+          if (_passwordController.text.isNotEmpty) ...[
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: _passwordStrength),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(
+                        height: 6,
+                        width: double.infinity,
+                        child: Stack(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: value,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      _passwordStrengthColor.withValues(
+                                          alpha: 0.7),
+                                      _passwordStrengthColor,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: _passwordStrengthColor.withValues(
+                                          alpha: 0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        _passwordStrengthLabel,
+                        style: TextStyle(
+                          color: _passwordStrengthColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 8),
+            _buildPasswordRequirement('Vsaj 8 znakov', _hasMinLength),
+            _buildPasswordRequirement(
+                'Vsaj 1 velika črka (A-Z)', _hasUppercase),
+            _buildPasswordRequirement('Vsaj 1 številka (0-9)', _hasDigit),
+            _buildPasswordRequirement(
+                'Vsaj 1 poseben znak (!@#...)', _hasSpecialChar),
+          ],
 
           const Spacer(),
           PrimaryButton(
             text: "Naprej",
             onPressed: () {
-              if (_nameController.text.isNotEmpty &&
-                  _birthDate != null &&
-                  _emailController.text.isNotEmpty &&
-                  _passwordController.text.isNotEmpty) {
-                _nextPage();
-              } else {
+              if (_nameController.text.isEmpty ||
+                  _birthDate == null ||
+                  _emailController.text.isEmpty ||
+                  _passwordController.text.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Prosim izpolni vsa polja")),
                 );
+              } else if (!_isPasswordValid) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Geslo ne izpolnjuje vseh zahtev"),
+                    backgroundColor: Colors.redAccent,
+                  ),
+                );
+              } else {
+                _nextPage();
               }
             },
           ),
@@ -954,6 +1126,38 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     }
   }
 
+  Widget _buildPasswordRequirement(String text, bool isMet) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: Row(
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) =>
+                ScaleTransition(scale: animation, child: child),
+            child: Icon(
+              isMet ? LucideIcons.checkCircle2 : LucideIcons.circle,
+              key: ValueKey(isMet),
+              size: 16,
+              color: isMet ? Colors.greenAccent : Colors.white30,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyle(
+              color: isMet ? Colors.greenAccent : Colors.white38,
+              fontSize: 12,
+              fontWeight: isMet ? FontWeight.w600 : FontWeight.normal,
+              decoration: isMet ? TextDecoration.lineThrough : null,
+              decorationColor: Colors.greenAccent.withValues(alpha: 0.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _completeRegistration() async {
     // Elegant "Congratulations" Animation Dialog
     showGeneralDialog(
@@ -1019,7 +1223,60 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 20),
+
+                    // Email verification notification
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.blue.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.mail,
+                                color: Colors.lightBlueAccent, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Verifikacijski email poslan!",
+                                  style: GoogleFonts.outfit(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "Preverite ${_emailController.text}",
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
                     const SizedBox(
                       width: 40,
                       height: 40,
@@ -1036,15 +1293,21 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
 
     // Save Data logic (Mock)
-    // ... (rest of logic remains similar, just saving photos too if needed)
+    // Convert photos to file paths for photoUrls
+    final photoUrls =
+        _photos.where((p) => p != null).map((p) => p!.path).toList();
+
     final user = AuthUser(
       id: 'generated_id',
       name: _nameController.text,
       email: _emailController.text,
       password: _passwordController.text,
+      photoUrls: photoUrls,
       age: (DateTime.now().difference(_birthDate!).inDays / 365).floor(),
       birthDate: _birthDate,
       gender: _selectedGender,
+      location:
+          _locationController.text.isNotEmpty ? _locationController.text : null,
       interestedIn: _interestedIn,
       isSmoker: _isSmoker,
       occupation: _occupation,

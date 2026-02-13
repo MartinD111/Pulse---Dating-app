@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouter
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart'; // Import MatchProfile
 
@@ -26,6 +27,8 @@ class MatchesScreen extends StatefulWidget {
 }
 
 class _MatchesScreenState extends State<MatchesScreen> {
+  bool _isEditMode = false;
+
   // Mock Data
   final List<MatchItem> _matches = [
     MatchItem(
@@ -87,6 +90,28 @@ class _MatchesScreenState extends State<MatchesScreen> {
     context.push('/profile', extra: profile);
   }
 
+  void _removeMatch(int index) {
+    final match = _matches[index];
+    setState(() {
+      _matches.removeAt(index);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${match.name} odstranjen/-a'),
+        duration: const Duration(seconds: 2),
+        action: SnackBarAction(
+          label: 'Razveljavi',
+          textColor: Colors.pinkAccent,
+          onPressed: () {
+            setState(() {
+              _matches.insert(index, match);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -94,92 +119,177 @@ class _MatchesScreenState extends State<MatchesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Ljudje",
-              style: GoogleFonts.outfit(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
+          // Header with edit button
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text("Ljudje",
+                    style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _isEditMode = !_isEditMode),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: _isEditMode
+                        ? Colors.pinkAccent.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _isEditMode ? Colors.pinkAccent : Colors.white24,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isEditMode ? LucideIcons.check : LucideIcons.pencil,
+                        size: 14,
+                        color: _isEditMode ? Colors.pinkAccent : Colors.white70,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isEditMode ? 'Končaj' : 'Uredi',
+                        style: TextStyle(
+                          color:
+                              _isEditMode ? Colors.pinkAccent : Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
 
-          // New Headers
+          // Sub-headers
           Text("Upravljaj svoje pretekle stike",
               style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Colors.white)),
           const SizedBox(height: 5),
-          const Text("Ali želiš še kdaj jih srečati ali ne",
-              style: TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(
+            _isEditMode
+                ? "Klikni X za odstranitev osebe"
+                : "Ali želiš še kdaj jih srečati ali ne",
+            style: TextStyle(
+                color: _isEditMode
+                    ? Colors.pinkAccent.withValues(alpha: 0.7)
+                    : Colors.white70,
+                fontSize: 14),
+          ),
 
           const SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
-              itemCount: _matches.length,
-              itemBuilder: (context, index) {
-                final match = _matches[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GestureDetector(
-                    onTap: () => _openProfile(context, match),
-                    child: GlassCard(
-                      opacity: 0.15,
-                      borderRadius: 50, // Pill shape
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 8),
-                      child: Row(
-                        children: [
-                          // Avatar
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundImage: NetworkImage(match.imageUrl),
-                          ),
-                          const SizedBox(width: 15),
+            child: _matches.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(LucideIcons.users,
+                            size: 48, color: Colors.white24),
+                        const SizedBox(height: 12),
+                        Text('Ni matchev',
+                            style: GoogleFonts.outfit(
+                                color: Colors.white38, fontSize: 16)),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _matches.length,
+                    itemBuilder: (context, index) {
+                      final match = _matches[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: GestureDetector(
+                          onTap: _isEditMode
+                              ? null
+                              : () => _openProfile(context, match),
+                          child: GlassCard(
+                            opacity: 0.15,
+                            borderRadius: 50, // Pill shape
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 8),
+                            child: Row(
+                              children: [
+                                // Avatar
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundImage: NetworkImage(match.imageUrl),
+                                ),
+                                const SizedBox(width: 15),
 
-                          // Name & Age
-                          Text("${match.name}, ${match.age}",
-                              style: GoogleFonts.outfit(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 18)),
+                                // Name & Age
+                                Expanded(
+                                  child: Text("${match.name}, ${match.age}",
+                                      style: GoogleFonts.outfit(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 18)),
+                                ),
 
-                          const Spacer(),
-
-                          // Toggle
-                          // Wrap switch in GestureDetector to prevent opening profile when toggling
-                          GestureDetector(
-                            onTap: () {}, // Capture tap to prevent bubbling
-                            child: Transform.scale(
-                              scale: 0.8,
-                              child: Switch(
-                                value: match.wantToMatchAgain,
-                                activeThumbColor: Colors.white,
-                                activeTrackColor: Colors.pinkAccent,
-                                inactiveThumbColor: Colors.white70,
-                                inactiveTrackColor: Colors.white12,
-                                thumbColor:
-                                    WidgetStateProperty.resolveWith<Color>(
-                                        (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return Colors.white;
-                                  }
-                                  return Colors.white70;
-                                }),
-                                onChanged: (val) {
-                                  setState(() {
-                                    match.wantToMatchAgain = val;
-                                  });
-                                },
-                              ),
+                                // Toggle or Delete
+                                if (_isEditMode)
+                                  GestureDetector(
+                                    onTap: () => _removeMatch(index),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            Colors.red.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: Colors.red
+                                                .withValues(alpha: 0.4)),
+                                      ),
+                                      child: const Icon(LucideIcons.x,
+                                          color: Colors.red, size: 18),
+                                    ),
+                                  )
+                                else
+                                  GestureDetector(
+                                    onTap: () {},
+                                    child: Transform.scale(
+                                      scale: 0.8,
+                                      child: Switch(
+                                        value: match.wantToMatchAgain,
+                                        activeThumbColor: Colors.white,
+                                        activeTrackColor: Colors.pinkAccent,
+                                        inactiveThumbColor: Colors.white70,
+                                        inactiveTrackColor: Colors.white12,
+                                        thumbColor: WidgetStateProperty
+                                            .resolveWith<Color>((states) {
+                                          if (states
+                                              .contains(WidgetState.selected)) {
+                                            return Colors.white;
+                                          }
+                                          return Colors.white70;
+                                        }),
+                                        onChanged: (val) {
+                                          setState(() {
+                                            match.wantToMatchAgain = val;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                const SizedBox(width: 5),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 5),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

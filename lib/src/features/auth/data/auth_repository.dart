@@ -28,6 +28,7 @@ class AuthUser {
   final String? exerciseHabit; // 'Včasih', 'Ne', 'Redno', 'Zelo aktiven'
   final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
   final String? petPreference; // 'Dog person', 'Cat person'
+  final String? location; // Where the user is from
 
   final List<String> lookingFor; // 'Short-term', 'Long-term', etc.
   final List<String> languages;
@@ -43,6 +44,7 @@ class AuthUser {
 
   final int ageRangeStart;
   final int ageRangeEnd;
+  final bool showPingAnimation;
 
   const AuthUser({
     required this.id,
@@ -63,6 +65,7 @@ class AuthUser {
     this.exerciseHabit,
     this.sleepSchedule,
     this.petPreference,
+    this.location,
     this.lookingFor = const [],
     this.languages = const [],
     this.hobbies = const [],
@@ -75,6 +78,7 @@ class AuthUser {
     this.isPrideMode = false,
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
+    this.showPingAnimation = true,
   });
 
   AuthUser copyWith({
@@ -96,6 +100,7 @@ class AuthUser {
     String? exerciseHabit,
     String? sleepSchedule,
     String? petPreference,
+    String? location,
     List<String>? lookingFor,
     List<String>? languages,
     List<String>? hobbies,
@@ -108,6 +113,7 @@ class AuthUser {
     bool? isPrideMode,
     int? ageRangeStart,
     int? ageRangeEnd,
+    bool? showPingAnimation,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -130,6 +136,7 @@ class AuthUser {
       exerciseHabit: exerciseHabit ?? this.exerciseHabit,
       sleepSchedule: sleepSchedule ?? this.sleepSchedule,
       petPreference: petPreference ?? this.petPreference,
+      location: location ?? this.location,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,
@@ -142,6 +149,7 @@ class AuthUser {
       isPrideMode: isPrideMode ?? this.isPrideMode,
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
+      showPingAnimation: showPingAnimation ?? this.showPingAnimation,
     );
   }
 }

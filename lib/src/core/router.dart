@@ -10,6 +10,8 @@ import '../features/dashboard/presentation/home_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/matches/data/match_repository.dart'; // MatchProfile is here
 import '../features/profile/presentation/profile_detail_screen.dart'; // Correct path
+import '../features/profile/presentation/profile_card_preview.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
 import '../shared/ui/gradient_scaffold.dart'; // Assume exists
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -44,6 +46,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           }
           return ProfileDetailScreen(match: match);
         },
+      ),
+      GoRoute(
+        path: '/profile-preview',
+        builder: (context, state) => const ProfileCardPreview(),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        builder: (context, state) => const EditProfileScreen(),
       ),
       GoRoute(
         path: '/settings',

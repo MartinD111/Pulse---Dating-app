@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
@@ -24,74 +26,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  void _showAddHobbyDialog(BuildContext context, AuthUser user) {
-    final nameController = TextEditingController();
-    final emojiController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text("Dodaj svoj hobi",
-            style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: "Ime hobija",
-                labelStyle: TextStyle(color: Colors.white70),
-                enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white54)),
-              ),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: emojiController,
-              style: const TextStyle(color: Colors.white),
-              maxLength: 2,
-              decoration: const InputDecoration(
-                labelText: "Ikona (Emoji)",
-                labelStyle: TextStyle(color: Colors.white70),
-                helperText: "Uporabi sistemsko tipkovnico za emoji",
-                helperStyle: TextStyle(color: Colors.white54),
-                enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white54)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child:
-                const Text("Prekliči", style: TextStyle(color: Colors.white70)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent),
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                final newHobby =
-                    "${emojiController.text.trim()} ${nameController.text.trim()}";
-                final updatedHobbies = List<String>.from(user.hobbies)
-                  ..add(newHobby);
-
-                ref
-                    .read(authStateProvider.notifier)
-                    .updateProfile(user.copyWith(hobbies: updatedHobbies));
-
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text("Dodaj", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   void _updateProfile(AuthUser updatedUser) {
@@ -134,8 +68,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 children: [
                   _buildProfileSection(user),
                   const SizedBox(height: 20),
-                  _buildAppSettingsSection(user),
-                  const SizedBox(height: 20),
                   _buildPreferencesSection(user),
                   const SizedBox(height: 20),
                   _buildLifestyleSection(user),
@@ -143,6 +75,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   _buildAccountSection(user),
                   const SizedBox(height: 20),
                   _buildPremiumSection(user),
+                  const SizedBox(height: 20),
+                  _buildAppSettingsSection(user),
                   const SizedBox(height: 30),
                   PrimaryButton(
                       text: "Odjava",
@@ -167,7 +101,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             radius: 50,
             backgroundColor: Colors.white24,
             backgroundImage: user.photoUrls.isNotEmpty
-                ? NetworkImage(user.photoUrls.first)
+                ? (user.photoUrls.first.startsWith('http')
+                    ? NetworkImage(user.photoUrls.first)
+                    : FileImage(File(user.photoUrls.first)) as ImageProvider)
                 : null,
             onBackgroundImageError:
                 user.photoUrls.isNotEmpty ? (_, __) {} : null,
@@ -181,33 +117,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.white)),
-          const SizedBox(height: 15),
-          // Hobbies with emoji icons
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              ...user.hobbies.map((h) {
-                final emoji = _getHobbyEmoji(h, user.gender);
-                final displayText = '$emoji $h';
-                return Chip(
-                  label: Text(displayText,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w500)),
-                  backgroundColor: Colors.black54,
-                  side: const BorderSide(color: Colors.white24),
-                  shape: const StadiumBorder(),
-                );
-              }),
-              ActionChip(
-                label: const Icon(Icons.add, color: Colors.white, size: 18),
-                backgroundColor: Colors.pinkAccent.withValues(alpha: 0.5),
-                side: BorderSide.none,
-                shape: const StadiumBorder(),
-                onPressed: () => _showAddHobbyDialog(context, user),
+          if (user.location != null && user.location!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(LucideIcons.mapPin, size: 14, color: Colors.white54),
+                const SizedBox(width: 4),
+                Text(user.location!,
+                    style:
+                        const TextStyle(color: Colors.white60, fontSize: 14)),
+              ],
+            ),
+          ],
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => context.push('/profile-preview'),
+              icon: const Icon(LucideIcons.eye, size: 18, color: Colors.white),
+              label: Text('Ogled profilne kartice',
+                  style: GoogleFonts.outfit(
+                      color: Colors.white, fontWeight: FontWeight.w600)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.white30),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -248,6 +186,61 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 _updateProfile(user.copyWith(isPrideMode: val));
               },
             ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text("Odstrani ping animacijo",
+                style: TextStyle(color: Colors.white)),
+            subtitle: const Text("Izklopi subtilne pulze v ozadju",
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            value: !user.showPingAnimation,
+            activeThumbColor: Colors.white,
+            activeTrackColor: Colors.grey[800],
+            inactiveTrackColor: Colors.white24,
+            onChanged: (val) {
+              _updateProfile(user.copyWith(showPingAnimation: !val));
+            },
+          ),
+          Divider(color: Colors.white.withValues(alpha: 0.1)),
+          const SizedBox(height: 4),
+          const Text("Jezik aplikacije",
+              style: TextStyle(
+                  color: Colors.white70, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            children: [
+              {'label': '🇸🇮 Slovenščina', 'code': 'sl'},
+              {'label': '🇬🇧 English', 'code': 'en'},
+              {'label': '🇩🇪 Deutsch', 'code': 'de'},
+            ].map((option) {
+              final label = option['label']!;
+              // For now, default to Slovenian
+              final isSelected = label.contains('Slovenščina');
+              return ChoiceChip(
+                label: Text(label),
+                selected: isSelected,
+                onSelected: (s) {
+                  // Language change logic — placeholder for now
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Jezik nastavljen: $label'),
+                        duration: const Duration(seconds: 1)),
+                  );
+                },
+                selectedColor: Colors.white,
+                backgroundColor: Colors.black54,
+                labelStyle: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal),
+                shape: StadiumBorder(
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24)),
+                showCheckmark: false,
+              );
+            }).toList(),
+          ),
         ],
       ),
     );
@@ -629,70 +622,5 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         },
       ),
     );
-  }
-
-  String _getHobbyEmoji(String hobby, String? gender) {
-    bool isFemale = gender == 'Ženska';
-    // Strip any existing emoji prefix (custom hobbies may already have one)
-    final cleanHobby = hobby
-        .replaceAll(
-            RegExp(r'^[\p{So}\p{Cn}\p{Sk}\p{Sm}]+\s*', unicode: true), '')
-        .trim();
-    switch (cleanHobby) {
-      case 'Fitnes':
-        return isFemale ? '🏋️‍♀️' : '🏋️‍♂️';
-      case 'Pilates':
-        return isFemale ? '🧘‍♀️' : '🧘‍♂️';
-      case 'Sprehodi':
-        return isFemale ? '🚶‍♀️' : '🚶‍♂️';
-      case 'Tek':
-        return isFemale ? '🏃‍♀️' : '🏃‍♂️';
-      case 'Smučanje':
-        return '⛷️';
-      case 'Snowboarding':
-        return '🏂';
-      case 'Plezanje':
-        return isFemale ? '🧗‍♀️' : '🧗‍♂️';
-      case 'Plavanje':
-        return isFemale ? '🏊‍♀️' : '🏊‍♂️';
-      case 'Branje':
-        return '📖';
-      case 'Kava':
-        return '☕';
-      case 'Čaj':
-        return '🍵';
-      case 'Kuhanje':
-        return isFemale ? '👩‍🍳' : '👨‍🍳';
-      case 'Filmi':
-        return '🎬';
-      case 'Serije':
-        return '📺';
-      case 'Videoigre':
-        return '🎮';
-      case 'Glasba':
-        return '🎵';
-      case 'Slikanje':
-        return '🎨';
-      case 'Fotografija':
-        return '📸';
-      case 'Pisanje':
-        return '✍️';
-      case 'Muzeji':
-        return '🏛️';
-      case 'Gledališče':
-        return '🎭';
-      case 'Roadtrips':
-        return '🚗';
-      case 'Camping':
-        return '⛺';
-      case 'City breaks':
-        return '🏙️';
-      case 'Backpacking':
-        return '🎒';
-      case 'Bordanje':
-        return '🏂';
-      default:
-        return '✨';
-    }
   }
 }
