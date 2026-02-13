@@ -12,6 +12,26 @@ class LoginScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Local state for text fields provided by hooks or just use StatefulWidget if needed.
+    // Since this is ConsumerWidget, we can't use setState easily without converting.
+    // Let's convert to ConsumerStatefulWidget to handle text controllers.
+    return _LoginScreenStateful();
+  }
+}
+
+class _LoginScreenStateful extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_LoginScreenStateful> createState() =>
+      _LoginScreenStatefulState();
+}
+
+class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: RadarBackground(
         child: Center(
@@ -29,21 +49,76 @@ class LoginScreen extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
                 const SizedBox(height: 50),
-                PrimaryButton(
-                    text: "Login with Email",
-                    onPressed: () async {
-                      try {
-                        await ref
-                            .read(authStateProvider.notifier)
-                            .login("test@example.com", "password");
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Login failed: $e")),
-                          );
+
+                // Email Input
+                TextField(
+                  controller: _emailController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon:
+                        const Icon(LucideIcons.mail, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+                const SizedBox(height: 15),
+
+                // Password Input
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon:
+                        const Icon(LucideIcons.lock, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.white),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                if (_isLoading)
+                  const CircularProgressIndicator(color: Colors.white)
+                else
+                  PrimaryButton(
+                      text: "Login",
+                      onPressed: () async {
+                        setState(() => _isLoading = true);
+                        try {
+                          await ref.read(authStateProvider.notifier).login(
+                              _emailController.text, _passwordController.text);
+                          // Navigation is handled by router based on auth state
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Login failed: $e")),
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isLoading = false);
                         }
-                      }
-                    }),
+                      }),
+
                 const SizedBox(height: 15),
                 PrimaryButton(
                     text: "Continue with Google",

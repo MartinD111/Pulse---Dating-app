@@ -41,6 +41,9 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final List<String> _selectedHobbies = [];
   final Map<String, String> _prompts = {}; // prompt question -> answer
 
+  // New state
+  RangeValues _ageRange = const RangeValues(20, 30);
+
   void _nextPage() {
     _pageController.nextPage(
       duration: const Duration(milliseconds: 300),
@@ -306,10 +309,47 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _buildSectionLabel("Koga iščem?", LucideIcons.search),
             Wrap(
               spacing: 10,
-              children: ['Moški', 'Ženska', 'Oba'].map((option) {
-                return _buildChoiceChip(option, _interestedIn == option,
-                    (s) => setState(() => _interestedIn = s ? option : null));
+              children: [
+                {'label': 'Moški', 'icon': Icons.male},
+                {'label': 'Ženska', 'icon': Icons.female},
+                {'label': 'Oba', 'icon': LucideIcons.users},
+              ].map((option) {
+                final label = option['label'] as String;
+                final icon = option['icon'] as IconData;
+                return _buildChoiceChip(label, _interestedIn == label,
+                    (s) => setState(() => _interestedIn = s ? label : null),
+                    icon: icon);
               }).toList(),
+            ),
+            const SizedBox(height: 25),
+
+            // Age Range Slider
+            _buildSectionLabel("Starostni razpon", LucideIcons.calendarRange),
+            RangeSlider(
+              values: _ageRange,
+              min: 18,
+              max: 100,
+              divisions: 82,
+              activeColor: Colors.white,
+              inactiveColor: Colors.white24,
+              labels: RangeLabels(
+                _ageRange.start.round().toString(),
+                _ageRange.end.round().toString(),
+              ),
+              onChanged: (RangeValues values) {
+                setState(() {
+                  _ageRange = values;
+                });
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("${_ageRange.start.round()} let",
+                    style: const TextStyle(color: Colors.white70)),
+                Text("${_ageRange.end.round()} let",
+                    style: const TextStyle(color: Colors.white70)),
+              ],
             ),
             const SizedBox(height: 25),
 
@@ -338,9 +378,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             _buildSectionLabel("Status", LucideIcons.briefcase),
             Wrap(
               spacing: 10,
-              children: ['Študent', 'Zaposlen'].map((option) {
-                return _buildChoiceChip(option, _occupation == option,
-                    (s) => setState(() => _occupation = option));
+              children: [
+                {'label': 'Študent', 'icon': LucideIcons.graduationCap},
+                {'label': 'Zaposlen', 'icon': LucideIcons.briefcase},
+              ].map((option) {
+                final label = option['label'] as String;
+                final icon = option['icon'] as IconData;
+                return _buildChoiceChip(label, _occupation == label,
+                    (s) => setState(() => _occupation = label),
+                    icon: icon);
               }).toList(),
             ),
             const SizedBox(height: 25),
@@ -417,6 +463,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 'Hrvaščina'
               ].map((option) {
                 final isSelected = _spokenLanguages.contains(option);
+                final flag = _getLanguageFlag(option);
                 return _buildFilterChip(option, isSelected, (s) {
                   setState(() {
                     if (s) {
@@ -427,7 +474,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                       _spokenLanguages.remove(option);
                     }
                   });
-                });
+                }, avatar: Text(flag, style: const TextStyle(fontSize: 16)));
               }).toList(),
             ),
 
@@ -472,9 +519,20 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _buildChoiceChip(
-      String label, bool isSelected, Function(bool) onSelected) {
+      String label, bool isSelected, Function(bool) onSelected,
+      {IconData? icon}) {
     return ChoiceChip(
-      label: Text(label),
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon,
+                size: 18, color: isSelected ? Colors.black : Colors.white),
+            const SizedBox(width: 8),
+          ],
+          Text(label),
+        ],
+      ),
       selected: isSelected,
       onSelected: onSelected,
       selectedColor: Colors.white,
@@ -491,13 +549,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _buildFilterChip(
-      String label, bool isSelected, Function(bool) onSelected) {
+      String label, bool isSelected, Function(bool) onSelected,
+      {Widget? avatar}) {
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
       selectedColor: Colors.white,
       backgroundColor: Colors.black45,
+      avatar: avatar,
       labelStyle: TextStyle(
           color: isSelected ? Colors.black : Colors.white,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
@@ -604,13 +664,15 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                         !hobbyCategories.values.any((list) => list.contains(h)))
                     .map((h) => Chip(
                           label: Text(h,
-                              style: const TextStyle(color: Colors.white)),
-                          backgroundColor: Colors.pinkAccent,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                          backgroundColor: Colors.pink.shade700,
                           deleteIcon: const Icon(Icons.close,
                               size: 14, color: Colors.white),
                           onDeleted: () =>
                               setState(() => _selectedHobbies.remove(h)),
-                          side: BorderSide.none,
+                          side: const BorderSide(color: Colors.white30),
                           shape: const StadiumBorder(),
                         )),
                 ActionChip(
@@ -837,6 +899,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       prompts: _prompts,
       isOnboarded: true,
       isEmailVerified: false,
+      ageRangeStart: _ageRange.start.round(),
+      ageRangeEnd: _ageRange.end.round(),
     );
 
     await Future.delayed(const Duration(seconds: 3));
@@ -844,7 +908,28 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     if (mounted) {
       Navigator.of(context).pop(); // Close dialog
       await ref.read(authStateProvider.notifier).completeOnboarding(user);
-      if (mounted) context.go('/');
+      if (mounted) context.go('/'); // Assuming '/' is Home
+    }
+  }
+
+  String _getLanguageFlag(String lang) {
+    switch (lang) {
+      case 'Slovenščina':
+        return '🇸🇮';
+      case 'Angleščina':
+        return '🇬🇧';
+      case 'Nemščina':
+        return '🇩🇪';
+      case 'Italijanščina':
+        return '🇮🇹';
+      case 'Francoščina':
+        return '🇫🇷';
+      case 'Španščina':
+        return '🇪🇸';
+      case 'Hrvaščina':
+        return '🇭🇷';
+      default:
+        return '🏳️';
     }
   }
 

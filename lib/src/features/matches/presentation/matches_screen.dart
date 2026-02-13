@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // Import GoRouter
 import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/ui/glass_card.dart';
+import '../../matches/data/match_repository.dart'; // Import MatchProfile
 
 class MatchItem {
   final String name;
@@ -45,6 +47,43 @@ class _MatchesScreenState extends State<MatchesScreen> {
         wantToMatchAgain: false),
   ];
 
+  void _openProfile(BuildContext context, MatchItem item) {
+    // Convert MatchItem to MatchProfile
+    // In a real app, you might fetch full details by ID or have them already.
+    final profile = MatchProfile(
+      id: item.name, // Use name as mock ID
+      name: item.name,
+      age: item.age,
+      imageUrl: item.imageUrl,
+      // Provide generic mock details for now since MatchItem doesn't have them
+      bio: item.name == "Eva"
+          ? "Uživam v dobri kavi, sprehodih v naravi in spontanih izletih. Vedno za akcijo!"
+          : "Rada potujem in spoznavam nove ljudi. Vedno za kavo in dober pogovor.",
+      hobbies: item.name == "Eva"
+          ? ["Potovanja", "Kava", "Glasba", "Šport"]
+          : ["Knjige", "Kino", "Kuhanje"],
+      jobTitle: item.name == "Eva" ? "Grafična Oblikovalka" : "Študentka",
+      company: item.name == "Eva" ? "Freelance" : null,
+      school: item.name == "Eva" ? "ALUO" : "Filozofska fakulteta",
+      isSmoker: false,
+      isDrinker: true,
+      introvertLevel: item.name == "Ana" ? 2 : 4,
+      gender: 'Female', // Mock assumption
+      prompts: [
+        {
+          'question': 'Moj idealen zmenek...',
+          'answer': 'Piknik na plaži ob sončnem zahodu s kozarcem vina.'
+        },
+        {
+          'question': 'Zmano nikoli ni dolgčas, ker...',
+          'answer': 'Vedno najdem neko novo avanturo.'
+        }
+      ],
+    );
+
+    context.push('/profile', extra: profile);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -77,54 +116,62 @@ class _MatchesScreenState extends State<MatchesScreen> {
                 final match = _matches[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: GlassCard(
-                    opacity: 0.15,
-                    borderRadius: 50, // Pill shape
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Row(
-                      children: [
-                        // Avatar
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundImage: NetworkImage(match.imageUrl),
-                        ),
-                        const SizedBox(width: 15),
-
-                        // Name & Age
-                        Text("${match.name}, ${match.age}",
-                            style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 18)),
-
-                        const Spacer(),
-
-                        // Toggle
-                        Transform.scale(
-                          scale: 0.8,
-                          child: Switch(
-                            value: match.wantToMatchAgain,
-                            activeThumbColor: Colors.white,
-                            activeTrackColor: Colors.pinkAccent,
-                            inactiveThumbColor: Colors.white70,
-                            inactiveTrackColor: Colors.white12,
-                            thumbColor: WidgetStateProperty.resolveWith<Color>(
-                                (states) {
-                              if (states.contains(WidgetState.selected)) {
-                                return Colors.white;
-                              }
-                              return Colors.white70;
-                            }),
-                            onChanged: (val) {
-                              setState(() {
-                                match.wantToMatchAgain = val;
-                              });
-                            },
+                  child: GestureDetector(
+                    onTap: () => _openProfile(context, match),
+                    child: GlassCard(
+                      opacity: 0.15,
+                      borderRadius: 50, // Pill shape
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 8),
+                      child: Row(
+                        children: [
+                          // Avatar
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundImage: NetworkImage(match.imageUrl),
                           ),
-                        ),
-                        const SizedBox(width: 5),
-                      ],
+                          const SizedBox(width: 15),
+
+                          // Name & Age
+                          Text("${match.name}, ${match.age}",
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 18)),
+
+                          const Spacer(),
+
+                          // Toggle
+                          // Wrap switch in GestureDetector to prevent opening profile when toggling
+                          GestureDetector(
+                            onTap: () {}, // Capture tap to prevent bubbling
+                            child: Transform.scale(
+                              scale: 0.8,
+                              child: Switch(
+                                value: match.wantToMatchAgain,
+                                activeThumbColor: Colors.white,
+                                activeTrackColor: Colors.pinkAccent,
+                                inactiveThumbColor: Colors.white70,
+                                inactiveTrackColor: Colors.white12,
+                                thumbColor:
+                                    WidgetStateProperty.resolveWith<Color>(
+                                        (states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return Colors.white;
+                                  }
+                                  return Colors.white70;
+                                }),
+                                onChanged: (val) {
+                                  setState(() {
+                                    match.wantToMatchAgain = val;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                        ],
+                      ),
                     ),
                   ),
                 );

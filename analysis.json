@@ -1,0 +1,5 @@
+
+  error - The named parameter 'child' is required, but there's no corresponding argument - lib\src\features\profile\presentation\profile_detail_screen.dart:16:12 - missing_required_argument
+  error - The named parameter 'body' isn't defined - lib\src\features\profile\presentation\profile_detail_screen.dart:17:7 - undefined_named_parameter
+  error - Undefined name 'context' - lib\src\features\profile\presentation\profile_detail_screen.dart:374:38 - undefined_identifier
+

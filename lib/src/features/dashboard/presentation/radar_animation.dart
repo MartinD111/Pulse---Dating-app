@@ -37,8 +37,8 @@ class _RadarAnimationState extends State<RadarAnimation>
         FlutterBackgroundService().startService();
       } else {
         _controller.stop();
-        _controller.reset();
-        // Optional: Stop background service
+        // Do not reset to keep the line where it was
+        FlutterBackgroundService().invoke("stopService");
       }
     }
   }

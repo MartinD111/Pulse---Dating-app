@@ -7,12 +7,19 @@ class AuthUser {
   final bool isOnboarded;
   final DateTime? birthDate;
   final List<String> photoUrls;
-  final String? gender; // 'Male', 'Female', 'Both'
-  final String? interestedIn; // 'Male', 'Female', 'Both'
-  final bool? isSmoker;
+  final String? gender; // 'Moški', 'Ženska', 'Oba' (or english)
+  final String? interestedIn; // 'Moški', 'Ženska', 'Oba'
+
+  // New Preferences
+  final bool? isSmoker; // User's status
+  final String? partnerSmokingPreference; // 'No', 'Yes', 'Idc'
+
   final String? occupation; // 'Student', 'Employed'
   final String? drinkingHabit; // 'Never', 'Occasionally', 'Regularly'
-  final int? introvertScale; // 1-5
+
+  final int? introvertScale; // User's scale 1-5
+  final String? partnerIntrovertPreference; // 'Introvert', 'Extrovert', 'Idc'
+
   final List<String> lookingFor; // 'Short-term', 'Long-term', etc.
   final List<String> languages;
   final List<String> hobbies;
@@ -20,6 +27,13 @@ class AuthUser {
   final bool isEmailVerified;
   final bool isAdmin;
   final bool isPremium;
+
+  // Theme Settings
+  final bool isDarkMode;
+  final bool isPrideMode;
+
+  final int ageRangeStart;
+  final int ageRangeEnd;
 
   const AuthUser({
     required this.id,
@@ -30,9 +44,11 @@ class AuthUser {
     this.gender,
     this.interestedIn,
     this.isSmoker,
+    this.partnerSmokingPreference,
     this.occupation,
     this.drinkingHabit,
     this.introvertScale,
+    this.partnerIntrovertPreference,
     this.lookingFor = const [],
     this.languages = const [],
     this.hobbies = const [],
@@ -41,9 +57,14 @@ class AuthUser {
     this.isEmailVerified = false,
     this.isAdmin = false,
     this.isPremium = false,
+    this.isDarkMode = false,
+    this.isPrideMode = false,
+    this.ageRangeStart = 18,
+    this.ageRangeEnd = 100,
   });
 
   AuthUser copyWith({
+    String? id,
     String? name,
     int? age,
     DateTime? birthDate,
@@ -51,9 +72,11 @@ class AuthUser {
     String? gender,
     String? interestedIn,
     bool? isSmoker,
+    String? partnerSmokingPreference,
     String? occupation,
     String? drinkingHabit,
     int? introvertScale,
+    String? partnerIntrovertPreference,
     List<String>? lookingFor,
     List<String>? languages,
     List<String>? hobbies,
@@ -62,9 +85,13 @@ class AuthUser {
     bool? isEmailVerified,
     bool? isAdmin,
     bool? isPremium,
+    bool? isDarkMode,
+    bool? isPrideMode,
+    int? ageRangeStart,
+    int? ageRangeEnd,
   }) {
     return AuthUser(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       age: age ?? this.age,
       birthDate: birthDate ?? this.birthDate,
@@ -72,9 +99,13 @@ class AuthUser {
       gender: gender ?? this.gender,
       interestedIn: interestedIn ?? this.interestedIn,
       isSmoker: isSmoker ?? this.isSmoker,
+      partnerSmokingPreference:
+          partnerSmokingPreference ?? this.partnerSmokingPreference,
       occupation: occupation ?? this.occupation,
       drinkingHabit: drinkingHabit ?? this.drinkingHabit,
       introvertScale: introvertScale ?? this.introvertScale,
+      partnerIntrovertPreference:
+          partnerIntrovertPreference ?? this.partnerIntrovertPreference,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,
@@ -83,6 +114,10 @@ class AuthUser {
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
       isAdmin: isAdmin ?? this.isAdmin,
       isPremium: isPremium ?? this.isPremium,
+      isDarkMode: isDarkMode ?? this.isDarkMode,
+      isPrideMode: isPrideMode ?? this.isPrideMode,
+      ageRangeStart: ageRangeStart ?? this.ageRangeStart,
+      ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
     );
   }
 }
@@ -92,7 +127,18 @@ class AuthRepository {
 
   Future<AuthUser> loginWithEmail(String email, String password) async {
     await Future.delayed(const Duration(seconds: 1)); // Mock delay
-    _currentUser = const AuthUser(id: 'user_123', isOnboarded: true);
+    _currentUser = const AuthUser(
+      id: 'user_123',
+      isOnboarded: true,
+      gender: 'Moški', // Default to Male for testing Blue theme
+      interestedIn: 'Oba', // Default to Both to test Pride Mode toggle
+      ageRangeStart: 20,
+      ageRangeEnd: 30,
+      hobbies: ['Plezanje', 'Bordanje'],
+      isEmailVerified: true,
+      isAdmin: true,
+      isPremium: true,
+    );
     return _currentUser!;
   }
 
@@ -103,6 +149,8 @@ class AuthRepository {
       id: 'google_user_456',
       name: 'Google User',
       isEmailVerified: true,
+      gender: 'Moški',
+      interestedIn: 'Oba',
     );
     return _currentUser!;
   }
@@ -116,9 +164,10 @@ class AuthRepository {
 
   Future<void> completeOnboarding(AuthUser user) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    if (_currentUser != null) {
-      _currentUser = user.copyWith(isOnboarded: true);
-    }
+    // Set the user as logged in and onboarded
+    _currentUser = user.copyWith(
+        id: 'new_user_${DateTime.now().millisecondsSinceEpoch}',
+        isOnboarded: true);
   }
 
   AuthUser? get currentUser => _currentUser;
