@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/registration_flow.dart';
+import '../features/auth/presentation/forgot_password_screen.dart';
 import '../features/auth/data/auth_repository.dart';
 
 // Placeholders for screens if they don't exist yet/imported
@@ -27,6 +28,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const RegistrationFlow(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
       ),
       GoRoute(
         path: '/',
@@ -69,6 +74,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!isLoggedIn) {
         if (isOnboardingRoute) return null;
+        if (state.uri.toString() == '/forgot-password') return null;
         return isLoginRoute ? null : '/login';
       }
 

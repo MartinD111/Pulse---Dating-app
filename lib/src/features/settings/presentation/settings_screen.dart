@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/translations.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -18,6 +19,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
+  final PageController _photoPageController = PageController();
+  int _currentPhotoPage = 0;
 
   @override
   bool get wantKeepAlive => true;
@@ -25,15 +28,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   @override
   void dispose() {
     _scrollController.dispose();
+    _photoPageController.dispose();
     super.dispose();
   }
 
+  String _t(String key) {
+    final user = ref.read(authStateProvider);
+    return t(key, user?.appLanguage ?? 'en');
+  }
+
   void _updateProfile(AuthUser updatedUser) {
-    // Save scroll position before update
     final offset =
         _scrollController.hasClients ? _scrollController.offset : 0.0;
     ref.read(authStateProvider.notifier).updateProfile(updatedUser);
-    // Restore scroll position after rebuild
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(offset);
@@ -54,7 +61,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 60),
-          Text("Nastavitve",
+          Text(_t('settings'),
               style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -79,7 +86,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   _buildAppSettingsSection(user),
                   const SizedBox(height: 30),
                   PrimaryButton(
-                      text: "Odjava",
+                      text: _t('change_password'),
+                      isSecondary: true,
+                      onPressed: _showChangePasswordDialog),
+                  const SizedBox(height: 15),
+                  PrimaryButton(
+                      text: _t('logout'),
                       isSecondary: true,
                       onPressed: () {
                         ref.read(authStateProvider.notifier).logout();
@@ -93,50 +105,263 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  void _showChangePasswordDialog() {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool obscureOld = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1E1E2E),
+              title: Text(_t('change_password'),
+                  style: const TextStyle(color: Colors.white)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: oldPasswordController,
+                    obscureText: obscureOld,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: _t('old_password'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureOld ? LucideIcons.eyeOff : LucideIcons.eye,
+                            color: Colors.white54),
+                        onPressed: () =>
+                            setState(() => obscureOld = !obscureOld),
+                      ),
+                      enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white54)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: newPasswordController,
+                    obscureText: obscureNew,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: _t('new_password'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureNew ? LucideIcons.eyeOff : LucideIcons.eye,
+                            color: Colors.white54),
+                        onPressed: () =>
+                            setState(() => obscureNew = !obscureNew),
+                      ),
+                      enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white54)),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: obscureConfirm,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: _t('confirm_password'),
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                            obscureConfirm
+                                ? LucideIcons.eyeOff
+                                : LucideIcons.eye,
+                            color: Colors.white54),
+                        onPressed: () =>
+                            setState(() => obscureConfirm = !obscureConfirm),
+                      ),
+                      enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white54)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(_t('cancel'),
+                      style: const TextStyle(color: Colors.white70)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent),
+                  onPressed: () async {
+                    if (newPasswordController.text !=
+                        confirmPasswordController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Passwords don't match")),
+                      );
+                      return;
+                    }
+                    if (newPasswordController.text.length < 8) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text("Password must be at least 8 chars")),
+                      );
+                      return;
+                    }
+                    // Call backend
+                    await ref.read(authStateProvider.notifier).changePassword(
+                        oldPasswordController.text, newPasswordController.text);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(_t('password_changed'))),
+                      );
+                    }
+                  },
+                  child: Text(_t('save'),
+                      style: const TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildProfileSection(AuthUser user) {
+    final hasPhotos = user.photoUrls.isNotEmpty;
+    final photoCount = user.photoUrls.length;
+
     return GlassCard(
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundColor: Colors.white24,
-            backgroundImage: user.photoUrls.isNotEmpty
-                ? (user.photoUrls.first.startsWith('http')
-                    ? NetworkImage(user.photoUrls.first)
-                    : FileImage(File(user.photoUrls.first)) as ImageProvider)
-                : null,
-            onBackgroundImageError:
-                user.photoUrls.isNotEmpty ? (_, __) {} : null,
-            child: user.photoUrls.isEmpty
-                ? const Icon(Icons.person, size: 50, color: Colors.white)
-                : null,
-          ),
-          const SizedBox(height: 15),
-          Text("${user.name ?? 'Guest'}, ${user.age ?? '?'}",
-              style: GoogleFonts.outfit(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          if (user.location != null && user.location!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(LucideIcons.mapPin, size: 14, color: Colors.white54),
-                const SizedBox(width: 4),
-                Text(user.location!,
-                    style:
-                        const TextStyle(color: Colors.white60, fontSize: 14)),
-              ],
+          // Hero image with PageView gallery
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: SizedBox(
+              height: 360,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (hasPhotos)
+                    PageView.builder(
+                      controller: _photoPageController,
+                      itemCount: photoCount,
+                      onPageChanged: (i) =>
+                          setState(() => _currentPhotoPage = i),
+                      itemBuilder: (context, index) {
+                        final url = user.photoUrls[index];
+                        return url.startsWith('http')
+                            ? Image.network(url,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    Container(color: Colors.grey[900]))
+                            : Image.file(File(url),
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    Container(color: Colors.grey[900]));
+                      },
+                    )
+                  else
+                    Container(
+                      color: Colors.white10,
+                      child: const Center(
+                        child:
+                            Icon(Icons.person, size: 80, color: Colors.white24),
+                      ),
+                    ),
+                  // Gradient overlay
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.15),
+                              Colors.black.withValues(alpha: 0.75),
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Name + age overlay
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${user.name ?? 'Guest'}, ${user.age ?? '?'}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                        ),
+                        if (user.location != null &&
+                            user.location!.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(LucideIcons.mapPin,
+                                  size: 14, color: Colors.white70),
+                              const SizedBox(width: 4),
+                              Text(user.location!,
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 14)),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  // Dot indicators
+                  if (photoCount > 1)
+                    Positioned(
+                      top: 12,
+                      left: 0,
+                      right: 0,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(photoCount, (i) {
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            margin: const EdgeInsets.symmetric(horizontal: 3),
+                            width: _currentPhotoPage == i ? 20 : 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color: _currentPhotoPage == i
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.4),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ],
-          const SizedBox(height: 20),
+          ),
+          const SizedBox(height: 16),
+          // Profile preview button
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: () => context.push('/profile-preview'),
               icon: const Icon(LucideIcons.eye, size: 18, color: Colors.white),
-              label: Text('Ogled profilne kartice',
+              label: Text(_t('profile_card_view'),
                   style: GoogleFonts.outfit(
                       color: Colors.white, fontWeight: FontWeight.w600)),
               style: OutlinedButton.styleFrom(
@@ -153,18 +378,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   }
 
   Widget _buildAppSettingsSection(AuthUser user) {
+    final lang = user.appLanguage;
+
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Videz aplikacije",
-              style: TextStyle(
+          Text(_t('app_appearance'),
+              style: const TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title:
-                const Text("Dark Mode", style: TextStyle(color: Colors.white)),
+            title: Text(_t('dark_mode'),
+                style: const TextStyle(color: Colors.white)),
             value: user.isDarkMode,
             activeThumbColor: Colors.white,
             activeTrackColor: Colors.grey[800],
@@ -176,8 +403,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           if (user.interestedIn == 'Oba' || user.interestedIn == 'Both')
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text("Pride Mode 🏳️‍🌈",
-                  style: TextStyle(color: Colors.white)),
+              title: Text(_t('pride_mode'),
+                  style: const TextStyle(color: Colors.white)),
               value: user.isPrideMode,
               activeThumbColor: Colors.white,
               activeTrackColor: Colors.purple.withValues(alpha: 0.5),
@@ -188,10 +415,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text("Odstrani ping animacijo",
-                style: TextStyle(color: Colors.white)),
-            subtitle: const Text("Izklopi subtilne pulze v ozadju",
-                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            title: Text(_t('remove_ping'),
+                style: const TextStyle(color: Colors.white)),
+            subtitle: Text(_t('remove_ping_sub'),
+                style: const TextStyle(color: Colors.white38, fontSize: 12)),
             value: !user.showPingAnimation,
             activeThumbColor: Colors.white,
             activeTrackColor: Colors.grey[800],
@@ -202,30 +429,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           Divider(color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 4),
-          const Text("Jezik aplikacije",
-              style: TextStyle(
+          Text(_t('app_language'),
+              style: const TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
-            children: [
-              {'label': '🇸🇮 Slovenščina', 'code': 'sl'},
-              {'label': '🇬🇧 English', 'code': 'en'},
-              {'label': '🇩🇪 Deutsch', 'code': 'de'},
-            ].map((option) {
+            runSpacing: 8,
+            children: availableLanguages.map((option) {
+              final code = option['code']!;
               final label = option['label']!;
-              // For now, default to Slovenian
-              final isSelected = label.contains('Slovenščina');
+              final isSelected = lang == code;
               return ChoiceChip(
                 label: Text(label),
                 selected: isSelected,
                 onSelected: (s) {
-                  // Language change logic — placeholder for now
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Jezik nastavljen: $label'),
-                        duration: const Duration(seconds: 1)),
-                  );
+                  if (s) {
+                    _updateProfile(user.copyWith(appLanguage: code));
+                  }
                 },
                 selectedColor: Colors.white,
                 backgroundColor: Colors.black54,
@@ -251,8 +472,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Preference",
-              style: TextStyle(
+          Text(_t('preferences'),
+              style: const TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
 
@@ -260,8 +481,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Starostni razpon",
-                  style: TextStyle(color: Colors.white)),
+              Text(_t('age_range'),
+                  style: const TextStyle(color: Colors.white)),
               Text("${user.ageRangeStart} - ${user.ageRangeEnd}",
                   style: const TextStyle(color: Colors.white70)),
             ],
@@ -288,18 +509,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           const SizedBox(height: 20),
 
           // Interested In
-          const Text("Koga iščem?", style: TextStyle(color: Colors.white)),
+          Text(_t('who_looking_for'),
+              style: const TextStyle(color: Colors.white)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             children: [
-              {'label': 'Moški', 'icon': Icons.male},
-              {'label': 'Ženska', 'icon': Icons.female},
-              {'label': 'Oba', 'icon': LucideIcons.users},
+              {'label': _t('male'), 'value': 'Moški', 'icon': Icons.male},
+              {'label': _t('female'), 'value': 'Ženska', 'icon': Icons.female},
+              {'label': _t('both'), 'value': 'Oba', 'icon': LucideIcons.users},
             ].map((option) {
               final label = option['label'] as String;
+              final value = option['value'] as String;
               final icon = option['icon'] as IconData;
-              final isSelected = user.interestedIn == label;
+              final isSelected = user.interestedIn == value;
               return ChoiceChip(
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -314,7 +537,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                 selected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    _updateProfile(user.copyWith(interestedIn: label));
+                    _updateProfile(user.copyWith(interestedIn: value));
                   }
                 },
                 selectedColor: Colors.white,
@@ -331,21 +554,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           const SizedBox(height: 20),
 
-          // Partner Smoking - Pill shaped selector
-          const Text("Partner kadi?", style: TextStyle(color: Colors.white)),
+          // Partner Smoking
+          Text(_t('partner_smokes'),
+              style: const TextStyle(color: Colors.white)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
-            children: ['Ne', 'Vseeno'].map((option) {
+            children: [
+              {'label': _t('no'), 'value': 'Ne'},
+              {'label': _t('dont_care'), 'value': 'Vseeno'},
+            ].map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
               final isSelected =
-                  (user.partnerSmokingPreference ?? 'Vseeno') == option;
+                  (user.partnerSmokingPreference ?? 'Vseeno') == value;
               return ChoiceChip(
-                label: Text(option),
+                label: Text(label),
                 selected: isSelected,
                 onSelected: (s) {
                   if (s) {
                     _updateProfile(
-                        user.copyWith(partnerSmokingPreference: option));
+                        user.copyWith(partnerSmokingPreference: value));
                   }
                 },
                 selectedColor: Colors.white,
@@ -365,8 +594,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           const SizedBox(height: 20),
 
           // Introvert/Extrovert
-          const Text("Tip osebnosti (Introvert/Ekstrovert)",
-              style: TextStyle(color: Colors.white70, fontSize: 13)),
+          Text(_t('personality_type'),
+              style: const TextStyle(color: Colors.white70, fontSize: 13)),
           Slider(
             value: (user.introvertScale ?? 3).toDouble(),
             min: 1,
@@ -395,94 +624,98 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Življenjski slog",
-              style: TextStyle(
+          Text(_t('lifestyle'),
+              style: const TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
 
           // Exercise
-          const Text("Telovadba", style: TextStyle(color: Colors.white)),
+          _buildLifestyleLabel(_t('exercise'), LucideIcons.dumbbell),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['Ne', 'Včasih', 'Redno', 'Zelo aktiven'].map((option) {
-              final isSelected = (user.exerciseHabit ?? 'Včasih') == option;
-              return ChoiceChip(
-                label: Text(option),
-                selected: isSelected,
+            children: [
+              {'label': _t('exercise_no'), 'value': 'Ne'},
+              {'label': _t('exercise_sometimes'), 'value': 'Včasih'},
+              {'label': _t('exercise_regularly'), 'value': 'Redno'},
+              {'label': _t('exercise_very_active'), 'value': 'Zelo aktiven'},
+            ].map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
+              final isSelected = (user.exerciseHabit ?? 'Včasih') == value;
+              return _buildChoiceChip(
+                label: label,
+                isSelected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    _updateProfile(user.copyWith(exerciseHabit: option));
+                    _updateProfile(user.copyWith(exerciseHabit: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color:
-                            isSelected ? Colors.transparent : Colors.white24)),
-                showCheckmark: false,
               );
             }).toList(),
           ),
           const SizedBox(height: 20),
 
           // Alcohol
-          const Text("Alkohol", style: TextStyle(color: Colors.white)),
+          _buildLifestyleLabel(_t('alcohol'), LucideIcons.wine),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['Nikoli', 'Družabno', 'Ob priliki'].map((option) {
-              final isSelected = (user.drinkingHabit ?? 'Družabno') == option;
-              return ChoiceChip(
-                label: Text(option),
-                selected: isSelected,
+            children: [
+              {'label': _t('alcohol_never'), 'value': 'Nikoli'},
+              {'label': _t('alcohol_socially'), 'value': 'Družabno'},
+              {'label': _t('alcohol_occasionally'), 'value': 'Ob priliki'},
+            ].map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
+              final isSelected = (user.drinkingHabit ?? 'Družabno') == value;
+              return _buildChoiceChip(
+                label: label,
+                isSelected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    _updateProfile(user.copyWith(drinkingHabit: option));
+                    _updateProfile(user.copyWith(drinkingHabit: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color:
-                            isSelected ? Colors.transparent : Colors.white24)),
-                showCheckmark: false,
               );
             }).toList(),
           ),
           const SizedBox(height: 20),
 
           // Sleep Schedule
-          const Text("Spanje", style: TextStyle(color: Colors.white)),
+          _buildLifestyleLabel(_t('sleep'), LucideIcons.moon),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
-            children: ['Nočna ptica', 'Jutranja ptica'].map((option) {
-              final isSelected =
-                  (user.sleepSchedule ?? 'Nočna ptica') == option;
+            children: [
+              {
+                'label': _t('night_owl'),
+                'value': 'Nočna ptica',
+                'icon': LucideIcons.moon
+              },
+              {
+                'label': _t('early_bird'),
+                'value': 'Jutranja ptica',
+                'icon': LucideIcons.sun
+              },
+            ].map((option) {
+              final label = option['label'] as String;
+              final value = option['value'] as String;
+              final icon = option['icon'] as IconData;
+              final isSelected = (user.sleepSchedule ?? 'Nočna ptica') == value;
               return ChoiceChip(
                 avatar: Icon(
-                  option == 'Nočna ptica' ? LucideIcons.moon : LucideIcons.sun,
+                  icon,
                   size: 16,
                   color: isSelected ? Colors.black : Colors.white,
                 ),
-                label: Text(option),
+                label: Text(label),
                 selected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    _updateProfile(user.copyWith(sleepSchedule: option));
+                    _updateProfile(user.copyWith(sleepSchedule: value));
                   }
                 },
                 selectedColor: Colors.white,
@@ -501,35 +734,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           const SizedBox(height: 20),
 
-          // Dog/Cat Person
-          const Text("Hišni ljubljenčki",
-              style: TextStyle(color: Colors.white)),
+          // Pets
+          _buildLifestyleLabel(_t('pets'), LucideIcons.dog),
           const SizedBox(height: 10),
           Wrap(
             spacing: 10,
-            children: ['Dog person 🐶', 'Cat person 🐱'].map((option) {
-              final val =
-                  option.startsWith('Dog') ? 'Dog person' : 'Cat person';
-              final isSelected = (user.petPreference ?? 'Dog person') == val;
-              return ChoiceChip(
-                label: Text(option),
-                selected: isSelected,
+            children: [
+              {'label': _t('dog_person'), 'value': 'Dog person'},
+              {'label': _t('cat_person'), 'value': 'Cat person'},
+            ].map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
+              final isSelected = (user.petPreference ?? 'Dog person') == value;
+              return _buildChoiceChip(
+                label: label,
+                isSelected: isSelected,
                 onSelected: (s) {
                   if (s) {
-                    _updateProfile(user.copyWith(petPreference: val));
+                    _updateProfile(user.copyWith(petPreference: value));
                   }
                 },
-                selectedColor: Colors.white,
-                backgroundColor: Colors.black54,
-                labelStyle: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal),
-                shape: StadiumBorder(
-                    side: BorderSide(
-                        color:
-                            isSelected ? Colors.transparent : Colors.white24)),
-                showCheckmark: false,
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 20),
+
+          // Children - NEW
+          _buildLifestyleLabel(_t('children'), LucideIcons.baby),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              {'label': _t('children_yes'), 'value': 'Da'},
+              {'label': _t('children_no'), 'value': 'Ne'},
+              {'label': _t('children_later'), 'value': 'Da, ampak kasneje'},
+            ].map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
+              final isSelected = (user.childrenPreference ?? 'Ne') == value;
+              return _buildChoiceChip(
+                label: label,
+                isSelected: isSelected,
+                onSelected: (s) {
+                  if (s) {
+                    _updateProfile(user.copyWith(childrenPreference: value));
+                  }
+                },
               );
             }).toList(),
           ),
@@ -538,12 +789,46 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     );
   }
 
+  /// Helper: lifestyle section label with icon
+  Widget _buildLifestyleLabel(String label, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.white70),
+        const SizedBox(width: 8),
+        Text(label, style: const TextStyle(color: Colors.white)),
+      ],
+    );
+  }
+
+  /// Helper: standard ChoiceChip with proper contrast
+  Widget _buildChoiceChip({
+    required String label,
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+  }) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: Colors.white,
+      backgroundColor: Colors.black54,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.black : Colors.white,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: StadiumBorder(
+          side: BorderSide(
+              color: isSelected ? Colors.transparent : Colors.white24)),
+      showCheckmark: false,
+    );
+  }
+
   String _getIntrovertLabel(int value) {
-    if (value == 1) return "Popoln Introvert";
-    if (value == 2) return "Bolj Introvert";
-    if (value == 3) return "Nekje vmes";
-    if (value == 4) return "Bolj Ekstrovert";
-    if (value == 5) return "Popoln Ekstrovert";
+    if (value == 1) return _t('full_introvert');
+    if (value == 2) return _t('more_introvert');
+    if (value == 3) return _t('somewhere_between');
+    if (value == 4) return _t('more_extrovert');
+    if (value == 5) return _t('full_extrovert');
     return "";
   }
 
@@ -552,8 +837,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Nastavitve računa",
-              style: TextStyle(
+          Text(_t('account_settings'),
+              style: const TextStyle(
                   color: Colors.white70, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
           ListTile(
@@ -566,8 +851,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
             ),
             title: Text(
               user.isEmailVerified
-                  ? "Email Verificiran"
-                  : "Email NI Verificiran",
+                  ? _t('email_verified')
+                  : _t('email_not_verified'),
               style: const TextStyle(color: Colors.white),
             ),
             trailing: !user.isEmailVerified
@@ -575,18 +860,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                     onPressed: () {
                       _updateProfile(user.copyWith(isEmailVerified: true));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Email verificiran!")),
+                        SnackBar(content: Text(_t('email_verified'))),
                       );
                     },
-                    child: const Text("Verificiraj"),
+                    child: Text(_t('verify')),
                   )
                 : null,
           ),
           Divider(color: Colors.white.withValues(alpha: 0.1)),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text("Admin Mode (Bypass radar)",
-                style: TextStyle(color: Colors.white)),
+            title: Text(_t('admin_mode'),
+                style: const TextStyle(color: Colors.white)),
             value: user.isAdmin,
             activeThumbColor: Colors.red,
             activeTrackColor: Colors.red.withValues(alpha: 0.5),
@@ -604,13 +889,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return GlassCard(
       borderColor: Colors.amber,
       child: SwitchListTile(
-        title: const Row(
+        contentPadding: EdgeInsets.zero,
+        title: Row(
           children: [
-            Text("Aktiviraj Premium Račun",
-                style: TextStyle(
+            const Icon(LucideIcons.crown, color: Colors.amber, size: 20),
+            const SizedBox(width: 10),
+            Text(_t('premium_account'),
+                style: const TextStyle(
                     color: Colors.white, fontWeight: FontWeight.bold)),
-            SizedBox(width: 10),
-            Icon(LucideIcons.crown, color: Colors.amber, size: 20),
           ],
         ),
         value: user.isPremium,

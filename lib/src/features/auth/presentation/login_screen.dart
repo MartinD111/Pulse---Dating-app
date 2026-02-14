@@ -101,7 +101,26 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     fillColor: Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
-                const SizedBox(height: 25),
+                const SizedBox(height: 8),
+
+                // Forgot password link
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () => context.push('/forgot-password'),
+                    child: Text(
+                      "Pozabljeno geslo?",
+                      style: GoogleFonts.outfit(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        decoration: TextDecoration.underline,
+                        decorationColor: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
 
                 if (_isLoading)
                   const CircularProgressIndicator(color: Colors.white)

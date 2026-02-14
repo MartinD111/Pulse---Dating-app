@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../shared/ui/primary_button.dart';
 import '../data/auth_repository.dart';
 import 'radar_background.dart';
+import '../../../core/translations.dart';
 
 class RegistrationFlow extends ConsumerStatefulWidget {
   const RegistrationFlow({super.key});
@@ -51,6 +52,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String _exerciseHabit = 'Včasih';
   String _sleepSchedule = 'Nočna ptica';
   String _petPreference = 'Dog person';
+  String _childrenPreference = 'Ne';
 
   // --- Step 3: More Details ---
   final List<String> _selectedHobbies = [];
@@ -255,22 +257,74 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           ),
           const SizedBox(height: 20),
 
-          // Location
-          TextField(
-            controller: _locationController,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 18),
-            decoration: const InputDecoration(
-              labelText: 'Iz kje sem',
-              labelStyle: TextStyle(color: Colors.white70),
-              alignLabelWithHint: true,
-              prefixIcon:
-                  Icon(LucideIcons.mapPin, color: Colors.white54, size: 20),
-              enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white70)),
-              focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white)),
-            ),
+          // Location with Autocomplete
+          Autocomplete<String>(
+            optionsBuilder: (textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return const Iterable<String>.empty();
+              }
+              return locationSuggestions.where((city) => city
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase()));
+            },
+            onSelected: (String selection) {
+              _locationController.text = selection;
+            },
+            fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+              // Sync initial value
+              if (_locationController.text.isNotEmpty &&
+                  controller.text.isEmpty) {
+                controller.text = _locationController.text;
+              }
+              return TextField(
+                controller: controller,
+                focusNode: focusNode,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                onChanged: (val) => _locationController.text = val,
+                decoration: const InputDecoration(
+                  labelText: 'Iz kje sem',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  alignLabelWithHint: true,
+                  prefixIcon:
+                      Icon(LucideIcons.mapPin, color: Colors.white54, size: 20),
+                  enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white70)),
+                  focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white)),
+                ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 8,
+                  color: const Color(0xFF1E1E2E),
+                  borderRadius: BorderRadius.circular(12),
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxHeight: 200, maxWidth: 340),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: options.length,
+                      itemBuilder: (context, index) {
+                        final option = options.elementAt(index);
+                        return ListTile(
+                          dense: true,
+                          leading: const Icon(LucideIcons.mapPin,
+                              size: 16, color: Colors.white54),
+                          title: Text(option,
+                              style: const TextStyle(color: Colors.white)),
+                          onTap: () => onSelected(option),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 20),
 
@@ -716,7 +770,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             const SizedBox(height: 25),
 
             // Dog/Cat Person
-            _buildSectionLabel("Hišni ljubljenčki", LucideIcons.heart),
+            _buildSectionLabel("Hišni ljubljenčki", LucideIcons.dog),
             Wrap(
               spacing: 10,
               children: ['Dog person 🐶', 'Cat person 🐱'].map((option) {
@@ -724,6 +778,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     option.startsWith('Dog') ? 'Dog person' : 'Cat person';
                 return _buildChoiceChip(option, _petPreference == val,
                     (s) => setState(() => _petPreference = val));
+              }).toList(),
+            ),
+            const SizedBox(height: 25),
+
+            // Children
+            _buildSectionLabel("Otroci", LucideIcons.baby),
+            Wrap(
+              spacing: 10,
+              children: ['Da', 'Ne', 'Da, ampak kasneje'].map((option) {
+                return _buildChoiceChip(option, _childrenPreference == option,
+                    (s) => setState(() => _childrenPreference = option));
               }).toList(),
             ),
 
@@ -1316,6 +1381,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       exerciseHabit: _exerciseHabit,
       sleepSchedule: _sleepSchedule,
       petPreference: _petPreference,
+      childrenPreference: _childrenPreference,
       lookingFor: _lookingFor,
       languages: _spokenLanguages,
       hobbies: _selectedHobbies,

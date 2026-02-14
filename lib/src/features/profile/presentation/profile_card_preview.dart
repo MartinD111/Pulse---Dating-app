@@ -7,12 +7,27 @@ import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../auth/data/auth_repository.dart';
+import '../../../core/translations.dart';
 
-class ProfileCardPreview extends ConsumerWidget {
+class ProfileCardPreview extends ConsumerStatefulWidget {
   const ProfileCardPreview({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileCardPreview> createState() => _ProfileCardPreviewState();
+}
+
+class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
+  final PageController _photoPageController = PageController();
+  int _currentPhotoPage = 0;
+
+  @override
+  void dispose() {
+    _photoPageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider);
 
     if (user == null) {
@@ -20,6 +35,9 @@ class ProfileCardPreview extends ConsumerWidget {
           child: Center(
               child: Text('No user', style: TextStyle(color: Colors.white))));
     }
+
+    final hasPhotos = user.photoUrls.isNotEmpty;
+    final photoCount = user.photoUrls.length;
 
     return GradientScaffold(
       child: CustomScrollView(
@@ -33,47 +51,89 @@ class ProfileCardPreview extends ConsumerWidget {
               icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
               onPressed: () => context.pop(),
             ),
-            title: Text('Moja kartica',
+            title: Text(t('my_card', user.appLanguage),
                 style: GoogleFonts.outfit(
                     color: Colors.white, fontWeight: FontWeight.bold)),
             centerTitle: true,
             actions: [
               IconButton(
                 icon: const Icon(LucideIcons.pencil, color: Colors.white),
-                tooltip: 'Uredi profil',
+                tooltip: t('edit_profile', user.appLanguage),
                 onPressed: () => context.push('/edit-profile'),
               ),
             ],
           ),
 
-          // Main photo
+          // Main photo gallery
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 children: [
-                  // Hero photo
-                  Container(
-                    height: 360,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      color: Colors.white10,
-                      image: user.photoUrls.isNotEmpty
-                          ? DecorationImage(
-                              image: user.photoUrls.first.startsWith('http')
-                                  ? NetworkImage(user.photoUrls.first)
-                                  : FileImage(File(user.photoUrls.first))
-                                      as ImageProvider,
-                              fit: BoxFit.cover,
+                  // Photo gallery with PageView
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: SizedBox(
+                      height: 360,
+                      width: double.infinity,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (hasPhotos)
+                            PageView.builder(
+                              controller: _photoPageController,
+                              itemCount: photoCount,
+                              onPageChanged: (i) =>
+                                  setState(() => _currentPhotoPage = i),
+                              itemBuilder: (context, index) {
+                                final url = user.photoUrls[index];
+                                return url.startsWith('http')
+                                    ? Image.network(url,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            Container(color: Colors.grey[900]))
+                                    : Image.file(File(url),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            Container(color: Colors.grey[900]));
+                              },
                             )
-                          : null,
+                          else
+                            Container(
+                              color: Colors.white10,
+                              child: const Center(
+                                child: Icon(Icons.person,
+                                    size: 80, color: Colors.white24),
+                              ),
+                            ),
+                          // Dot indicators
+                          if (photoCount > 1)
+                            Positioned(
+                              top: 12,
+                              left: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: List.generate(photoCount, (i) {
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 250),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    width: _currentPhotoPage == i ? 20 : 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: _currentPhotoPage == i
+                                          ? Colors.white
+                                          : Colors.white.withValues(alpha: 0.4),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    child: user.photoUrls.isEmpty
-                        ? const Center(
-                            child: Icon(Icons.person,
-                                size: 80, color: Colors.white24))
-                        : null,
                   ),
 
                   const SizedBox(height: 20),
@@ -115,7 +175,7 @@ class ProfileCardPreview extends ConsumerWidget {
                   if (user.hobbies.isNotEmpty) ...[
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text('Hobiji',
+                      child: Text(t('hobbies', user.appLanguage),
                           style: GoogleFonts.outfit(
                               color: Colors.white70,
                               fontSize: 16,
@@ -147,7 +207,8 @@ class ProfileCardPreview extends ConsumerWidget {
 
                   // Looking for
                   if (user.lookingFor.isNotEmpty) ...[
-                    _buildSection('Iščem', user.lookingFor),
+                    _buildSection(
+                        t('looking_for', user.appLanguage), user.lookingFor),
                     const SizedBox(height: 24),
                   ],
 
@@ -173,7 +234,7 @@ class ProfileCardPreview extends ConsumerWidget {
       badges.add(_badge(LucideIcons.briefcase, user.occupation!));
     }
     if (user.isSmoker == true) {
-      badges.add(_badge(LucideIcons.cigarette, 'Kadilec'));
+      badges.add(_badge(LucideIcons.cigarette, t('smoker', user.appLanguage)));
     }
 
     return Wrap(
@@ -225,7 +286,11 @@ class ProfileCardPreview extends ConsumerWidget {
     }
     if (user.petPreference != null) {
       items.add(_lifestyleItem(
-          LucideIcons.heart, 'Ljubljenčki', user.petPreference!));
+          LucideIcons.dog, t('pets', user.appLanguage), user.petPreference!));
+    }
+    if (user.childrenPreference != null) {
+      items.add(_lifestyleItem(LucideIcons.baby,
+          t('children', user.appLanguage), user.childrenPreference!));
     }
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -234,7 +299,7 @@ class ProfileCardPreview extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Življenjski slog',
+          Text(t('lifestyle', user.appLanguage),
               style: GoogleFonts.outfit(
                   color: Colors.white70,
                   fontSize: 16,

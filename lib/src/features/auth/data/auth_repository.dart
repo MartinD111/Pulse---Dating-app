@@ -28,6 +28,7 @@ class AuthUser {
   final String? exerciseHabit; // 'Včasih', 'Ne', 'Redno', 'Zelo aktiven'
   final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
   final String? petPreference; // 'Dog person', 'Cat person'
+  final String? childrenPreference; // 'Da', 'Ne', 'Da, ampak kasneje'
   final String? location; // Where the user is from
 
   final List<String> lookingFor; // 'Short-term', 'Long-term', etc.
@@ -41,6 +42,9 @@ class AuthUser {
   // Theme Settings
   final bool isDarkMode;
   final bool isPrideMode;
+
+  // App language (default: 'en')
+  final String appLanguage;
 
   final int ageRangeStart;
   final int ageRangeEnd;
@@ -65,6 +69,7 @@ class AuthUser {
     this.exerciseHabit,
     this.sleepSchedule,
     this.petPreference,
+    this.childrenPreference,
     this.location,
     this.lookingFor = const [],
     this.languages = const [],
@@ -76,6 +81,7 @@ class AuthUser {
     this.isPremium = false,
     this.isDarkMode = false,
     this.isPrideMode = false,
+    this.appLanguage = 'en',
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
     this.showPingAnimation = true,
@@ -100,6 +106,7 @@ class AuthUser {
     String? exerciseHabit,
     String? sleepSchedule,
     String? petPreference,
+    String? childrenPreference,
     String? location,
     List<String>? lookingFor,
     List<String>? languages,
@@ -111,6 +118,7 @@ class AuthUser {
     bool? isPremium,
     bool? isDarkMode,
     bool? isPrideMode,
+    String? appLanguage,
     int? ageRangeStart,
     int? ageRangeEnd,
     bool? showPingAnimation,
@@ -136,6 +144,7 @@ class AuthUser {
       exerciseHabit: exerciseHabit ?? this.exerciseHabit,
       sleepSchedule: sleepSchedule ?? this.sleepSchedule,
       petPreference: petPreference ?? this.petPreference,
+      childrenPreference: childrenPreference ?? this.childrenPreference,
       location: location ?? this.location,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
@@ -147,6 +156,7 @@ class AuthUser {
       isPremium: isPremium ?? this.isPremium,
       isDarkMode: isDarkMode ?? this.isDarkMode,
       isPrideMode: isPrideMode ?? this.isPrideMode,
+      appLanguage: appLanguage ?? this.appLanguage,
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
       showPingAnimation: showPingAnimation ?? this.showPingAnimation,
@@ -161,15 +171,25 @@ class AuthRepository {
     await Future.delayed(const Duration(seconds: 1)); // Mock delay
     _currentUser = const AuthUser(
       id: 'user_123',
+      name: 'Martin',
+      age: 25,
       isOnboarded: true,
-      gender: 'Moški', // Default to Male for testing Blue theme
-      interestedIn: 'Oba', // Default to Both to test Pride Mode toggle
+      gender: 'Moški',
+      interestedIn: 'Ženska',
       ageRangeStart: 20,
       ageRangeEnd: 30,
       hobbies: ['Plezanje', 'Bordanje'],
+      exerciseHabit: 'Redno',
+      drinkingHabit: 'Družabno',
+      sleepSchedule: 'Nočna ptica',
+      petPreference: 'Dog person',
+      childrenPreference: 'Da, ampak kasneje',
+      location: 'Koper, Slovenija',
+      occupation: 'Študent',
       isEmailVerified: true,
       isAdmin: true,
       isPremium: true,
+      appLanguage: 'en',
     );
     return _currentUser!;
   }
@@ -207,6 +227,41 @@ class AuthRepository {
   void logout() {
     _currentUser = null;
   }
+
+  Future<void> resetPassword(String email, String newPassword) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Mock: pretend to find user by email and update password
+    _currentUser = const AuthUser(
+      id: 'user_123',
+      name: 'Martin',
+      age: 25,
+      isOnboarded: true,
+      gender: 'Moški',
+      interestedIn: 'Ženska',
+      ageRangeStart: 20,
+      ageRangeEnd: 30,
+      hobbies: ['Plezanje', 'Bordanje'],
+      exerciseHabit: 'Redno',
+      drinkingHabit: 'Družabno',
+      sleepSchedule: 'Nočna ptica',
+      petPreference: 'Dog person',
+      childrenPreference: 'Da, ampak kasneje',
+      location: 'Koper, Slovenija',
+      occupation: 'Študent',
+      isEmailVerified: true,
+      isAdmin: true,
+      isPremium: true,
+      appLanguage: 'en',
+    );
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Mock user password update
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(password: newPassword);
+    }
+  }
 }
 
 final authRepositoryProvider = Provider((ref) => AuthRepository());
@@ -241,5 +296,15 @@ class AuthNotifier extends StateNotifier<AuthUser?> {
   void logout() {
     _repository.logout();
     state = null;
+  }
+
+  Future<void> resetPassword(String email, String newPassword) async {
+    await _repository.resetPassword(email, newPassword);
+    state = _repository.currentUser;
+  }
+
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    await _repository.changePassword(oldPassword, newPassword);
+    state = _repository.currentUser;
   }
 }
