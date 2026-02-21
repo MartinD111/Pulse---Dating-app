@@ -1,0 +1,20 @@
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:282:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:283:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:284:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:285:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:286:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:287:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:525:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:526:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:527:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:528:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:529:5 - equal_keys_in_const_map
+  error - Two keys in a constant map literal can't be equal - lib\src\core\translations.dart:530:5 - equal_keys_in_const_map
+  error - Undefined name 'appLanguageProvider' - lib\src\features\auth\presentation\login_screen.dart:35:28 - undefined_identifier
+  error - The method 't' isn't defined for the type '_LoginScreenStatefulState' - lib\src\features\auth\presentation\login_screen.dart:36:30 - undefined_method
+warning - The left operand can't be null, so the right operand is never executed - lib\src\features\auth\presentation\login_screen.dart:117:57 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\src\features\auth\presentation\login_screen.dart:157:29 - dead_null_aware_expression
+  error - Undefined name 'availableLanguages' - lib\src\features\auth\presentation\login_screen.dart:188:28 - undefined_identifier
+  error - Undefined name 'appLanguageProvider' - lib\src\features\auth\presentation\login_screen.dart:198:34 - undefined_identifier
+warning - The value of the field '_obscureConfirmPassword' isn't used - lib\src\features\auth\presentation\registration_flow.dart:61:14 - unused_field
+  error - The method '_confirmPasswordInputField' isn't defined for the type '_RegistrationFlowState' - lib\src\features\auth\presentation\registration_flow.dart:480:13 - undefined_method

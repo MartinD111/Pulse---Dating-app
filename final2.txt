@@ -1,0 +1,19 @@
+warning - The left operand can't be null, so the right operand is never executed - lib\src\features\auth\presentation\login_screen.dart:118:57 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\src\features\auth\presentation\login_screen.dart:158:29 - dead_null_aware_expression
+flutter : 2 issues found. 
+(ran in 13.8s)
+At line:1 char:1
++ flutter analyze 
+--no-fatal-infos 2>&1 | 
+Where-Object {$_ -match 
+'erro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (2 issue  
+  s found. (ran in 13.8s):   
+ String) [], RemoteExcept    
+ion
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 

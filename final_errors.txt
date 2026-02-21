@@ -1,0 +1,4 @@
+  error - Undefined name 'appLanguageProvider' - lib\src\features\auth\presentation\login_screen.dart:35:28 - undefined_identifier
+  error - The method 't' isn't defined for the type '_LoginScreenStatefulState' - lib\src\features\auth\presentation\login_screen.dart:36:30 - undefined_method
+  error - Undefined name 'availableLanguages' - lib\src\features\auth\presentation\login_screen.dart:188:28 - undefined_identifier
+  error - Undefined name 'appLanguageProvider' - lib\src\features\auth\presentation\login_screen.dart:198:34 - undefined_identifier

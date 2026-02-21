@@ -149,7 +149,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                   ),
 
                   // Location
-                  if (user.location != null && user.location!.isNotEmpty) ...[
+                  if ((user.location?.isNotEmpty ?? false)) ...[
                     const SizedBox(height: 6),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +157,7 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                         const Icon(LucideIcons.mapPin,
                             size: 16, color: Colors.white54),
                         const SizedBox(width: 4),
-                        Text(user.location!,
+                        Text(user.location ?? '',
                             style: const TextStyle(
                                 color: Colors.white60, fontSize: 15)),
                       ],

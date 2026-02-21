@@ -22,6 +22,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _locationController = TextEditingController();
   final _imagePicker = ImagePicker();
 
+  // State flags
+  bool _hasChanges = false;
+  double _distancePreference = 50.0;
+  bool _isPremium = false;
+
+  // Profile fields
   List<String> _photoUrls = [];
   String? _gender;
   String? _occupation;
@@ -36,16 +42,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   List<String> _lookingFor = [];
   List<String> _languages = [];
 
-  String get _lang {
-    final user = ref.read(authStateProvider);
-    return user?.appLanguage ?? 'en';
-  }
+  String _lang = 'en';
 
   @override
   void initState() {
     super.initState();
     final user = ref.read(authStateProvider);
     if (user != null) {
+      _lang = user.appLanguage;
       _nameController.text = user.name ?? '';
       _locationController.text = user.location ?? '';
       _photoUrls = List.from(user.photoUrls);
@@ -61,7 +65,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       _hobbies = List.from(user.hobbies);
       _lookingFor = List.from(user.lookingFor);
       _languages = List.from(user.languages);
+      _distancePreference = user.maxDistance.toDouble();
+      _isPremium = user.isPremium;
     }
+
+    // Listen for changes
+    _nameController.addListener(_markChanged);
+    _locationController.addListener(_markChanged);
+  }
+
+  void _markChanged() {
+    if (!_hasChanges) setState(() => _hasChanges = true);
   }
 
   @override
@@ -71,16 +85,28 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    if (_photoUrls.length >= 4) return;
-    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() => _photoUrls.add(picked.path));
-    }
-  }
-
-  void _removePhoto(int index) {
-    setState(() => _photoUrls.removeAt(index));
+  Future<bool> _onWillPop() async {
+    if (!_hasChanges) return true;
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: Text(t('unsaved_changes', _lang),
+            style: const TextStyle(color: Colors.white)),
+        content: Text(t('discard_changes_q', _lang),
+            style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(t('cancel', _lang))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(t('discard', _lang),
+                  style: const TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+    return res ?? false;
   }
 
   void _saveChanges() {
@@ -102,151 +128,186 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           hobbies: _hobbies,
           lookingFor: _lookingFor,
           languages: _languages,
+          maxDistance: _distancePreference.round(),
         ));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(t('profile_updated', _lang))),
     );
+    setState(() => _hasChanges = false);
     context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final lang = _lang;
-    return GradientScaffold(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
+    const teal = Color(0xFF00D9A6);
+
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _onWillPop();
+        if (shouldPop && context.mounted) {
+          context.pop();
+        }
+      },
+      child: GradientScaffold(
+        child: Scaffold(
           backgroundColor: Colors.transparent,
-          title: Text(t('edit_profile', lang),
-              style: GoogleFonts.outfit(
-                  color: Colors.white, fontWeight: FontWeight.bold)),
-          iconTheme: const IconThemeData(color: Colors.white),
-          elevation: 0,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Photos ──
-              _buildSectionLabel(t('photos', lang), LucideIcons.camera),
-              const SizedBox(height: 8),
-              Text(t('photos_hint', lang),
-                  style: const TextStyle(color: Colors.white38, fontSize: 12)),
-              const SizedBox(height: 10),
-              _buildPhotoGrid(),
-              const SizedBox(height: 24),
-
-              // ── Name ──
-              _buildSectionLabel(t('name', lang), LucideIcons.user),
-              const SizedBox(height: 8),
-              _buildTextField(_nameController, t('name', lang)),
-              const SizedBox(height: 24),
-
-              // ── Location ──
-              _buildSectionLabel(t('location', lang), LucideIcons.mapPin),
-              const SizedBox(height: 8),
-              _buildLocationField(lang),
-              const SizedBox(height: 24),
-
-              // ── Gender ──
-              _buildSectionLabel(t('gender', lang), LucideIcons.users),
-              const SizedBox(height: 8),
-              _buildGenderChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Status / Occupation ──
-              _buildSectionLabel(t('status', lang), LucideIcons.briefcase),
-              const SizedBox(height: 8),
-              _buildOccupationChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Smoker ──
-              _buildSectionLabel(t('smoking', lang), LucideIcons.cigarette),
-              const SizedBox(height: 8),
-              _buildSmokerSwitch(lang),
-              const SizedBox(height: 24),
-
-              // ── Drinking Habit ──
-              _buildSectionLabel(t('alcohol', lang), LucideIcons.wine),
-              const SizedBox(height: 8),
-              _buildDrinkingChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Exercise ──
-              _buildSectionLabel(t('exercise', lang), LucideIcons.dumbbell),
-              const SizedBox(height: 8),
-              _buildExerciseChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Sleep ──
-              _buildSectionLabel(t('sleep', lang), LucideIcons.moon),
-              const SizedBox(height: 8),
-              _buildSleepChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Pets ──
-              _buildSectionLabel(t('pets', lang), LucideIcons.dog),
-              const SizedBox(height: 8),
-              _buildPetChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Children ──
-              _buildSectionLabel(t('children', lang), LucideIcons.baby),
-              const SizedBox(height: 8),
-              _buildChildrenChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Introvert/Extrovert ──
-              _buildSectionLabel(
-                  t('introvert_extrovert', lang), LucideIcons.brain),
-              const SizedBox(height: 8),
-              _buildIntrovertSlider(lang),
-              const SizedBox(height: 24),
-
-              // ── Looking For ──
-              _buildSectionLabel(t('looking_for', lang), LucideIcons.heart),
-              const SizedBox(height: 8),
-              _buildLookingForChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Languages ──
-              _buildSectionLabel(t('i_speak', lang), LucideIcons.languages),
-              const SizedBox(height: 8),
-              _buildLanguageChips(lang),
-              const SizedBox(height: 24),
-
-              // ── Hobbies ──
-              _buildSectionLabel('${t('hobbies', lang)} (${_hobbies.length})',
-                  LucideIcons.sparkles),
-              const SizedBox(height: 8),
-              _buildHobbiesSection(lang),
-              const SizedBox(height: 24),
-
-              const SizedBox(height: 30),
-
-              // Save Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            title: Text(t('edit_profile', lang),
+                style: GoogleFonts.outfit(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            iconTheme: const IconThemeData(color: Colors.white),
+            elevation: 0,
+            actions: [
+              if (_hasChanges)
+                TextButton(
                   onPressed: _saveChanges,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: Text(t('save_changes', lang),
-                      style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  child: Text(t('save', lang),
+                      style: const TextStyle(
+                          color: teal, fontWeight: FontWeight.bold)),
                 ),
-              ),
-              const SizedBox(height: 40),
             ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionLabel(t('photos', lang), LucideIcons.camera),
+                const SizedBox(height: 10),
+                _buildPhotoGrid(),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('name', lang), LucideIcons.user),
+                const SizedBox(height: 8),
+                _buildTextField(_nameController, t('name', lang)),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('location', lang), LucideIcons.mapPin),
+                const SizedBox(height: 8),
+                _buildLocationField(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('gender', lang), LucideIcons.users),
+                const SizedBox(height: 8),
+                _buildGenderChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('status', lang), LucideIcons.briefcase),
+                const SizedBox(height: 8),
+                _buildOccupationChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('smoking', lang), LucideIcons.cigarette),
+                const SizedBox(height: 8),
+                _buildSmokerSwitch(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('alcohol', lang), LucideIcons.wine),
+                const SizedBox(height: 8),
+                _buildDrinkingChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('exercise', lang), LucideIcons.dumbbell),
+                const SizedBox(height: 8),
+                _buildExerciseChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('sleep', lang), LucideIcons.moon),
+                const SizedBox(height: 8),
+                _buildSleepChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('pets', lang), LucideIcons.dog),
+                const SizedBox(height: 8),
+                _buildPetChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('children', lang), LucideIcons.baby),
+                const SizedBox(height: 8),
+                _buildChildrenChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(
+                    t('introvert_extrovert', lang), LucideIcons.brain),
+                const SizedBox(height: 8),
+                _buildIntrovertSlider(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('distance', lang), LucideIcons.map),
+                const SizedBox(height: 8),
+                _buildDistanceSlider(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('looking_for', lang), LucideIcons.heart),
+                const SizedBox(height: 8),
+                _buildLookingForChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel(t('i_speak', lang), LucideIcons.languages),
+                const SizedBox(height: 8),
+                _buildLanguageChips(lang),
+                const SizedBox(height: 24),
+                _buildSectionLabel('${t('hobbies', lang)} (${_hobbies.length})',
+                    LucideIcons.sparkles),
+                const SizedBox(height: 8),
+                _buildHobbiesSection(lang),
+                const SizedBox(height: 30),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _hasChanges ? _saveChanges : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _hasChanges ? teal : Colors.white12,
+                      foregroundColor:
+                          _hasChanges ? Colors.black : Colors.white24,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: Text(t('save_changes', lang),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDistanceSlider(String lang) {
+    const teal = Color(0xFF00D9A6);
+    final maxDist = _isPremium ? 100.0 : 50.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('10m',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            Text('${_distancePreference.round()}m',
+                style: const TextStyle(
+                    color: teal, fontWeight: FontWeight.bold, fontSize: 16)),
+            Text('${maxDist.round()}m',
+                style: const TextStyle(color: Colors.white38, fontSize: 12)),
+          ],
+        ),
+        Slider(
+          value: _distancePreference.clamp(10, maxDist),
+          min: 10,
+          max: maxDist,
+          divisions: (maxDist - 10).round(),
+          activeColor: teal,
+          onChanged: (v) {
+            setState(() {
+              _distancePreference = v;
+              _hasChanges = true;
+            });
+          },
+        ),
+        if (_distancePreference > 50)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, left: 16),
+            child: Text(
+              t('battery_warning', lang).replaceFirst('{percent}', '25'),
+              style: const TextStyle(color: Colors.orangeAccent, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 
@@ -514,31 +575,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Widget _buildDrinkingChips(String lang) {
     return _lifestyleWrap([
-      {'label': t('alcohol_never', lang), 'value': 'Nikoli'},
-      {'label': t('alcohol_socially', lang), 'value': 'Družabno'},
-      {'label': t('alcohol_occasionally', lang), 'value': 'Ob priliki'},
-    ], _drinkingHabit ?? 'Družabno', (val) {
-      setState(() => _drinkingHabit = val);
+      {'label': t('alcohol_never', lang), 'value': 'Never'},
+      {'label': t('alcohol_socially', lang), 'value': 'Socially'},
+      {'label': t('alcohol_occasionally', lang), 'value': 'Occasionally'},
+    ], _drinkingHabit ?? 'Socially', (val) {
+      setState(() {
+        _drinkingHabit = val;
+        _hasChanges = true;
+      });
     });
   }
 
   Widget _buildExerciseChips(String lang) {
     return _lifestyleWrap([
-      {'label': t('exercise_no', lang), 'value': 'Ne'},
-      {'label': t('exercise_sometimes', lang), 'value': 'Včasih'},
-      {'label': t('exercise_regularly', lang), 'value': 'Redno'},
-      {'label': t('exercise_very_active', lang), 'value': 'Zelo aktiven'},
-    ], _exerciseHabit ?? 'Včasih', (val) {
-      setState(() => _exerciseHabit = val);
+      {'label': t('exercise_no', lang), 'value': 'No'},
+      {'label': t('exercise_sometimes', lang), 'value': 'Sometimes'},
+      {'label': t('exercise_regularly', lang), 'value': 'Regularly'},
+      {'label': t('exercise_very_active', lang), 'value': 'Very active'},
+    ], _exerciseHabit ?? 'Sometimes', (val) {
+      setState(() {
+        _exerciseHabit = val;
+        _hasChanges = true;
+      });
     });
   }
 
   Widget _buildSleepChips(String lang) {
     return _lifestyleWrap([
-      {'label': t('night_owl', lang), 'value': 'Nočna ptica'},
-      {'label': t('early_bird', lang), 'value': 'Jutranja ptica'},
-    ], _sleepSchedule ?? 'Nočna ptica', (val) {
-      setState(() => _sleepSchedule = val);
+      {'label': t('night_owl', lang), 'value': 'Night owl'},
+      {'label': t('early_bird', lang), 'value': 'Early bird'},
+    ], _sleepSchedule ?? 'Night owl', (val) {
+      setState(() {
+        _sleepSchedule = val;
+        _hasChanges = true;
+      });
     });
   }
 
@@ -547,17 +617,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       {'label': t('dog_person', lang), 'value': 'Dog person'},
       {'label': t('cat_person', lang), 'value': 'Cat person'},
     ], _petPreference ?? 'Dog person', (val) {
-      setState(() => _petPreference = val);
+      setState(() {
+        _petPreference = val;
+        _hasChanges = true;
+      });
     });
   }
 
   Widget _buildChildrenChips(String lang) {
     return _lifestyleWrap([
-      {'label': t('children_yes', lang), 'value': 'Da'},
-      {'label': t('children_no', lang), 'value': 'Ne'},
-      {'label': t('children_later', lang), 'value': 'Da, ampak kasneje'},
-    ], _childrenPreference ?? 'Ne', (val) {
-      setState(() => _childrenPreference = val);
+      {'label': t('children_yes', lang), 'value': 'Yes'},
+      {'label': t('children_no', lang), 'value': 'No'},
+      {'label': t('children_later', lang), 'value': 'Want someday'},
+    ], _childrenPreference ?? 'No', (val) {
+      setState(() {
+        _childrenPreference = val;
+        _hasChanges = true;
+      });
     });
   }
 
@@ -796,6 +872,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   // HELPERS
   // ─────────────────────────────────────
 
+  Future<void> _pickImage() async {
+    final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery, imageQuality: 85);
+    if (picked != null) {
+      setState(() {
+        _photoUrls.add(picked.path);
+        _hasChanges = true;
+      });
+    }
+  }
+
+  void _removePhoto(int index) {
+    setState(() {
+      _photoUrls.removeAt(index);
+      _hasChanges = true;
+    });
+  }
+
   Widget _lifestyleWrap(
     List<Map<String, String>> options,
     String currentValue,
@@ -816,18 +910,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Widget _chip(String label, bool sel, ValueChanged<bool> onSelected) {
+    const teal = Color(0xFF00D9A6);
     return ChoiceChip(
       label: Text(label),
       selected: sel,
       onSelected: onSelected,
-      selectedColor: Colors.white,
-      backgroundColor: Colors.black54,
+      selectedColor: teal,
+      backgroundColor: Colors.white.withValues(alpha: 0.05),
       labelStyle: TextStyle(
-        color: sel ? Colors.black : Colors.white,
+        color: sel ? Colors.black : Colors.white70,
         fontWeight: sel ? FontWeight.bold : FontWeight.normal,
+        fontSize: 13,
       ),
       shape: StadiumBorder(
-          side: BorderSide(color: sel ? Colors.transparent : Colors.white24)),
+          side: BorderSide(color: sel ? Colors.transparent : Colors.white12)),
       showCheckmark: false,
     );
   }

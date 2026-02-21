@@ -42,13 +42,11 @@ class AuthUser {
   // Theme Settings
   final bool isDarkMode;
   final bool isPrideMode;
-
-  // App language (default: 'en')
   final String appLanguage;
-
   final int ageRangeStart;
   final int ageRangeEnd;
   final bool showPingAnimation;
+  final int maxDistance;
 
   const AuthUser({
     required this.id,
@@ -85,6 +83,7 @@ class AuthUser {
     this.ageRangeStart = 18,
     this.ageRangeEnd = 100,
     this.showPingAnimation = true,
+    this.maxDistance = 50,
   });
 
   AuthUser copyWith({
@@ -122,6 +121,7 @@ class AuthUser {
     int? ageRangeStart,
     int? ageRangeEnd,
     bool? showPingAnimation,
+    int? maxDistance,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -160,6 +160,7 @@ class AuthUser {
       ageRangeStart: ageRangeStart ?? this.ageRangeStart,
       ageRangeEnd: ageRangeEnd ?? this.ageRangeEnd,
       showPingAnimation: showPingAnimation ?? this.showPingAnimation,
+      maxDistance: maxDistance ?? this.maxDistance,
     );
   }
 }
