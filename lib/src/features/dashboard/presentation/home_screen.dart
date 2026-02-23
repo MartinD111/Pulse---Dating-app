@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -20,6 +19,10 @@ final isScanningProvider =
 
 // Simulates match ping distance (1.0 = edge, 0.0 = center, null = no ping)
 final pingDistanceProvider = StateProvider<double?>((ref) => null);
+final pingAngleProvider = StateProvider<double?>((ref) => null);
+
+// Tracks whether the nav bar is currently visible
+final isNavBarVisibleProvider = StateProvider<bool>((ref) => true);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -59,6 +62,7 @@ class HomeScreen extends ConsumerWidget {
     final navIndex = ref.watch(navIndexProvider);
     final isScanning = ref.watch(isScanningProvider);
     final pingDistance = ref.watch(pingDistanceProvider);
+    final pingAngle = ref.watch(pingAngleProvider);
     final bool canAccessRadar =
         user?.isEmailVerified == true || user?.isAdmin == true;
     final bool isPremium = user?.isPremium == true;
@@ -69,8 +73,8 @@ class HomeScreen extends ConsumerWidget {
 
     if (isPremium) {
       screens = [
-        _buildRadarView(
-            ref, context, canAccessRadar, isScanning, isPremium, pingDistance),
+        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
+            pingDistance, pingAngle),
         const PulseMapScreen(),
         const MatchesScreen(),
         const SettingsScreen(),
@@ -83,8 +87,8 @@ class HomeScreen extends ConsumerWidget {
       ];
     } else {
       screens = [
-        _buildRadarView(
-            ref, context, canAccessRadar, isScanning, isPremium, pingDistance),
+        _buildRadarView(ref, context, canAccessRadar, isScanning, isPremium,
+            pingDistance, pingAngle),
         const MatchesScreen(),
         const SettingsScreen(),
       ];
@@ -95,34 +99,62 @@ class HomeScreen extends ConsumerWidget {
       ];
     }
 
+    final hideNavBarPref = ref.watch(hideNavBarPrefProvider);
+    final isNavBarVisible = ref.watch(isNavBarVisibleProvider);
+
     return Stack(
       children: [
         // Content with Liquid Transition
         Positioned.fill(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            switchInCurve: Curves.easeOutQuart,
-            switchOutCurve: Curves.easeInQuart,
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale:
-                      Tween<double>(begin: 0.95, end: 1.0).animate(animation),
-                  child: child,
-                ),
-              );
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (!hideNavBarPref) {
+                // If preference is off, make sure nav bar is visible
+                if (!ref.read(isNavBarVisibleProvider)) {
+                  ref.read(isNavBarVisibleProvider.notifier).state = true;
+                }
+                return false;
+              }
+
+              if (notification is ScrollUpdateNotification) {
+                if (notification.scrollDelta != null) {
+                  if (notification.scrollDelta! > 5 && isNavBarVisible) {
+                    ref.read(isNavBarVisibleProvider.notifier).state = false;
+                  } else if (notification.scrollDelta! < -5 &&
+                      !isNavBarVisible) {
+                    ref.read(isNavBarVisibleProvider.notifier).state = true;
+                  }
+                }
+              }
+              return false;
             },
-            child: KeyedSubtree(
-              key: ValueKey<int>(navIndex),
-              child: screens[navIndex],
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 500),
+              switchInCurve: Curves.easeOutQuart,
+              switchOutCurve: Curves.easeInQuart,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale:
+                        Tween<double>(begin: 0.95, end: 1.0).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<int>(navIndex),
+                child: screens[navIndex],
+              ),
             ),
           ),
         ),
 
         // Floating Liquid Navigation Bar
-        Positioned(
-          bottom: 30,
+        AnimatedPositioned(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          bottom: isNavBarVisible ? 30 : -100,
           left: 0,
           right: 0,
           child: LiquidNavBar(
@@ -144,7 +176,8 @@ class HomeScreen extends ConsumerWidget {
       bool canAccessRadar,
       bool isScanning,
       bool isPremium,
-      double? pingDistance) {
+      double? pingDistance,
+      double? pingAngle) {
     return Stack(
       children: [
         // Radar View (Conditional)
@@ -155,7 +188,7 @@ class HomeScreen extends ConsumerWidget {
                       child: RadarAnimation(
                     isScanning: isScanning,
                     pingDistance: pingDistance,
-                    pingAngle: pi / 4,
+                    pingAngle: pingAngle,
                   )),
                   Center(
                     child: GestureDetector(

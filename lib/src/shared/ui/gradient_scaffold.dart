@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme.dart';
 import '../../features/auth/data/auth_repository.dart';
+import '../../features/auth/presentation/radar_background.dart';
 
 class GradientScaffold extends ConsumerWidget {
   final Widget child;
@@ -53,7 +54,11 @@ class GradientScaffold extends ConsumerWidget {
               ),
             ),
           ),
-          if (showPing) const _SubtlePingOverlay(),
+          if (showPing)
+            _SubtlePingOverlay(
+              accentColor:
+                  bgColors.isNotEmpty ? bgColors.first : Colors.pinkAccent,
+            ),
           SafeArea(child: child),
         ],
       ),
@@ -63,95 +68,69 @@ class GradientScaffold extends ConsumerWidget {
 
 /// Lightweight pulsing dots overlay — subtle ambient animation
 class _SubtlePingOverlay extends StatefulWidget {
-  const _SubtlePingOverlay();
+  final Color accentColor;
+  const _SubtlePingOverlay({required this.accentColor});
 
   @override
   State<_SubtlePingOverlay> createState() => _SubtlePingOverlayState();
 }
 
 class _SubtlePingOverlayState extends State<_SubtlePingOverlay>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late List<_PingDot> _dots;
+    with TickerProviderStateMixin {
+  late AnimationController _rotationController;
+  late AnimationController _pulseController;
+  final List<PulsingDot> _dots = [];
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 4),
+
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 8),
       vsync: this,
     )..repeat();
 
-    final rng = math.Random(42);
-    _dots = List.generate(8, (_) {
-      return _PingDot(
-        x: rng.nextDouble(),
-        y: rng.nextDouble(),
-        delay: rng.nextDouble(),
-        size: 2.0 + rng.nextDouble() * 3.0,
-      );
-    });
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+
+    _generateDots();
+  }
+
+  void _generateDots() {
+    final random = math.Random(42); // Use fixed seed or remove for randomness
+    for (int i = 0; i < 12; i++) {
+      _dots.add(PulsingDot(
+        angle: random.nextDouble() * 2 * math.pi,
+        distance: 0.3 + random.nextDouble() * 0.6,
+        delay: random.nextDouble(),
+      ));
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _rotationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _controller,
+      animation: Listenable.merge([_rotationController, _pulseController]),
       builder: (context, child) {
         return CustomPaint(
-          painter: _SubtlePingPainter(progress: _controller.value, dots: _dots),
+          painter: RadarPainter(
+            rotation: _rotationController.value,
+            pulseAnimation: _pulseController,
+            dots: _dots,
+            accentColor: widget.accentColor,
+          ),
           size: Size.infinite,
         );
       },
     );
   }
-}
-
-class _PingDot {
-  final double x, y, delay, size;
-  const _PingDot(
-      {required this.x,
-      required this.y,
-      required this.delay,
-      required this.size});
-}
-
-class _SubtlePingPainter extends CustomPainter {
-  final double progress;
-  final List<_PingDot> dots;
-
-  _SubtlePingPainter({required this.progress, required this.dots});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (final dot in dots) {
-      final phase = (progress + dot.delay) % 1.0;
-      final opacity = (math.sin(phase * math.pi) * 0.25).clamp(0.0, 1.0);
-      final pulseSize = dot.size + math.sin(phase * math.pi) * 3;
-
-      final pos = Offset(dot.x * size.width, dot.y * size.height);
-
-      // Glow
-      final glowPaint = Paint()
-        ..color = Colors.white.withValues(alpha: opacity * 0.3)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-      canvas.drawCircle(pos, pulseSize * 2, glowPaint);
-
-      // Core dot
-      final dotPaint = Paint()
-        ..color = Colors.white.withValues(alpha: opacity)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(pos, pulseSize, dotPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_SubtlePingPainter oldDelegate) =>
-      progress != oldDelegate.progress;
 }

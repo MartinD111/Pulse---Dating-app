@@ -9,6 +9,8 @@ import '../../../shared/ui/primary_button.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 
+final hideNavBarPrefProvider = StateProvider<bool>((ref) => false);
+
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -427,6 +429,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               _updateProfile(user.copyWith(showPingAnimation: !val));
             },
           ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Hide Navigation bar',
+                style: TextStyle(color: Colors.white)),
+            subtitle: const Text('Auto-hide on scroll',
+                style: TextStyle(color: Colors.white38, fontSize: 12)),
+            value: ref.watch(hideNavBarPrefProvider),
+            activeThumbColor: Colors.white,
+            activeTrackColor: Colors.grey[800],
+            inactiveTrackColor: Colors.white24,
+            onChanged: (val) {
+              ref.read(hideNavBarPrefProvider.notifier).state = val;
+            },
+          ),
           Divider(color: Colors.white.withValues(alpha: 0.1)),
           const SizedBox(height: 4),
           Text(_t('app_language'),
@@ -591,6 +607,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               );
             }).toList(),
           ),
+          const SizedBox(height: 20),
+
+          // --- Premium Locked Preferences ---
+          _buildPremiumPreferenceRow(
+              user: user,
+              title: _t('religion'),
+              currentValue: user.religionPreference,
+              options: [
+                {'label': _t('christianity'), 'value': 'christianity'},
+                {'label': _t('islam'), 'value': 'islam'},
+                {'label': _t('hinduism'), 'value': 'hinduism'},
+                {'label': _t('buddhism'), 'value': 'buddhism'},
+                {'label': _t('judaism'), 'value': 'judaism'},
+                {'label': _t('agnostic'), 'value': 'agnostic'},
+                {'label': _t('atheist'), 'value': 'atheist'},
+              ],
+              onUpdate: (val) =>
+                  _updateProfile(user.copyWith(religionPreference: val))),
+          const SizedBox(height: 20),
+
+          _buildPremiumPreferenceRow(
+              user: user,
+              title: _t('ethnicity'),
+              currentValue: user.ethnicityPreference,
+              options: [
+                {'label': _t('ethnicity_white'), 'value': 'white'},
+                {'label': _t('ethnicity_black'), 'value': 'black'},
+                {'label': _t('ethnicity_mixed'), 'value': 'mixed'},
+                {'label': _t('ethnicity_asian'), 'value': 'asian'},
+              ],
+              onUpdate: (val) =>
+                  _updateProfile(user.copyWith(ethnicityPreference: val))),
+          const SizedBox(height: 20),
+
+          _buildPremiumPreferenceRow(
+              user: user,
+              title: _t('hair_color'),
+              currentValue: user.hairColorPreference,
+              options: [
+                {'label': _t('hair_blonde'), 'value': 'blonde'},
+                {'label': _t('hair_brunette'), 'value': 'brunette'},
+                {'label': _t('hair_black'), 'value': 'black'},
+                {'label': _t('hair_red'), 'value': 'red'},
+                {'label': _t('hair_gray_white'), 'value': 'gray_white'},
+                {'label': _t('hair_other'), 'value': 'other'},
+              ],
+              onUpdate: (val) =>
+                  _updateProfile(user.copyWith(hairColorPreference: val))),
+          const SizedBox(height: 20),
+
+          _buildPremiumPreferenceRow(
+              user: user,
+              title: _t('political_affiliation'),
+              currentValue: user.politicalAffiliationPreference,
+              options: [
+                {'label': _t('politics_left'), 'value': 'politics_left'},
+                {
+                  'label': _t('politics_center_left'),
+                  'value': 'politics_center_left'
+                },
+                {'label': _t('politics_center'), 'value': 'politics_center'},
+                {
+                  'label': _t('politics_center_right'),
+                  'value': 'politics_center_right'
+                },
+                {'label': _t('politics_right'), 'value': 'politics_right'},
+              ],
+              onUpdate: (val) => _updateProfile(
+                  user.copyWith(politicalAffiliationPreference: val))),
           const SizedBox(height: 20),
 
           // Introvert/Extrovert
@@ -830,6 +915,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     if (value == 4) return _t('more_extrovert');
     if (value == 5) return _t('full_extrovert');
     return "";
+  }
+
+  Widget _buildPremiumPreferenceRow({
+    required AuthUser user,
+    required String title,
+    required String? currentValue,
+    required List<Map<String, String>> options,
+    required Function(String) onUpdate,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(title, style: const TextStyle(color: Colors.white)),
+            if (!user.isPremium) ...[
+              const SizedBox(width: 8),
+              const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
+            ]
+          ],
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: options.map((option) {
+              final label = option['label']!;
+              final value = option['value']!;
+              final isSelected = currentValue == value;
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: GestureDetector(
+                  onTap: () {
+                    if (!user.isPremium) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(_t('premium_account')),
+                          backgroundColor: Colors.amber[800],
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                      return;
+                    }
+                    if (!isSelected) {
+                      onUpdate(value);
+                    }
+                  },
+                  child: Chip(
+                    label: Text(label),
+                    backgroundColor: isSelected ? Colors.white : Colors.black54,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.black : Colors.white,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    side: BorderSide(
+                        color:
+                            isSelected ? Colors.transparent : Colors.white24),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildAccountSection(AuthUser user) {

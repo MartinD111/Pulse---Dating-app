@@ -31,6 +31,15 @@ class AuthUser {
   final String? childrenPreference; // 'Da', 'Ne', 'Da, ampak kasneje'
   final String? location; // Where the user is from
 
+  final String? religion;
+  final String? religionPreference;
+  final String? ethnicity;
+  final String? ethnicityPreference;
+  final String? hairColor;
+  final String? hairColorPreference;
+  final String? politicalAffiliation;
+  final String? politicalAffiliationPreference;
+
   final List<String> lookingFor; // 'Short-term', 'Long-term', etc.
   final List<String> languages;
   final List<String> hobbies;
@@ -69,6 +78,14 @@ class AuthUser {
     this.petPreference,
     this.childrenPreference,
     this.location,
+    this.religion,
+    this.religionPreference,
+    this.ethnicity,
+    this.ethnicityPreference,
+    this.hairColor,
+    this.hairColorPreference,
+    this.politicalAffiliation,
+    this.politicalAffiliationPreference,
     this.lookingFor = const [],
     this.languages = const [],
     this.hobbies = const [],
@@ -107,6 +124,14 @@ class AuthUser {
     String? petPreference,
     String? childrenPreference,
     String? location,
+    String? religion,
+    String? religionPreference,
+    String? ethnicity,
+    String? ethnicityPreference,
+    String? hairColor,
+    String? hairColorPreference,
+    String? politicalAffiliation,
+    String? politicalAffiliationPreference,
     List<String>? lookingFor,
     List<String>? languages,
     List<String>? hobbies,
@@ -146,6 +171,12 @@ class AuthUser {
       petPreference: petPreference ?? this.petPreference,
       childrenPreference: childrenPreference ?? this.childrenPreference,
       location: location ?? this.location,
+      religion: religion ?? this.religion,
+      religionPreference: religionPreference ?? this.religionPreference,
+      ethnicity: ethnicity ?? this.ethnicity,
+      ethnicityPreference: ethnicityPreference ?? this.ethnicityPreference,
+      hairColor: hairColor ?? this.hairColor,
+      hairColorPreference: hairColorPreference ?? this.hairColorPreference,
       lookingFor: lookingFor ?? this.lookingFor,
       languages: languages ?? this.languages,
       hobbies: hobbies ?? this.hobbies,

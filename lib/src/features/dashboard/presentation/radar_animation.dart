@@ -184,30 +184,30 @@ class RadarPainter extends CustomPainter {
     final pingY = center.dy + dist * sin(pingAngle);
     final pingCenter = Offset(pingX, pingY);
 
-    // Pulsing ring effect
-    for (int i = 0; i < 3; i++) {
-      final ringProgress = (pingProgress + i * 0.33) % 1.0;
-      final ringRadius = 6.0 + ringProgress * 18.0;
-      final ringAlpha = (1.0 - ringProgress) * 0.5;
+    // Pulsing ring effect - made stronger
+    for (int i = 0; i < 4; i++) {
+      final ringProgress = (pingProgress + i * 0.25) % 1.0;
+      final ringRadius = 8.0 + ringProgress * 30.0;
+      final ringAlpha = (1.0 - ringProgress) * 0.8;
       final ringPaint = Paint()
         ..color = Colors.pinkAccent.withValues(alpha: ringAlpha)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2;
+        ..strokeWidth = 3;
       canvas.drawCircle(pingCenter, ringRadius, ringPaint);
     }
 
-    // Core dot
+    // Core dot - larger
     final dotPaint = Paint()
       ..color = Colors.pinkAccent
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(pingCenter, 5, dotPaint);
+    canvas.drawCircle(pingCenter, 8, dotPaint);
 
-    // Glow
+    // Glow - more intense
     final glowPaint = Paint()
-      ..color = Colors.pinkAccent.withValues(alpha: 0.3)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8)
+      ..color = Colors.pinkAccent.withValues(alpha: 0.6)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(pingCenter, 8, glowPaint);
+    canvas.drawCircle(pingCenter, 15, glowPaint);
   }
 
   @override

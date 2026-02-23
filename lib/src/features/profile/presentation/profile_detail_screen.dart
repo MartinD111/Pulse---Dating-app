@@ -1,84 +1,173 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart';
+import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/radar
 
-class ProfileDetailScreen extends StatelessWidget {
+class ProfileDetailScreen extends ConsumerWidget {
   final MatchProfile match;
 
   const ProfileDetailScreen({super.key, required this.match});
 
   @override
-  Widget build(BuildContext context) {
-    return GradientScaffold(
-      child: Stack(
-        children: [
-          CustomScrollView(
-            slivers: [
-              _buildSliverAppBar(context),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Bio Section
-                      _buildBioSection(),
-                      const SizedBox(height: 20),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          _showExitWarning(context, ref);
+        },
+        child: GradientScaffold(
+          child: Stack(
+            children: [
+              CustomScrollView(
+                slivers: [
+                  _buildSliverAppBar(context),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 20, 40),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Bio Section
+                          _buildBioSection(),
+                          const SizedBox(height: 20),
 
-                      // What they're looking for
-                      if (match.lookingFor.isNotEmpty) ...[
-                        _buildLookingForSection(),
-                        const SizedBox(height: 20),
-                      ],
+                          // What they're looking for
+                          if (match.lookingFor.isNotEmpty) ...[
+                            _buildLookingForSection(),
+                            const SizedBox(height: 20),
+                          ],
 
-                      // Basic Info (Job, School, etc.)
-                      _buildInfoBadges(),
-                      const SizedBox(height: 20),
+                          // Basic Info (Job, School, etc.)
+                          _buildInfoBadges(),
+                          const SizedBox(height: 20),
 
-                      // Prompts
-                      if (match.prompts.isNotEmpty) ...[
-                        _buildPromptsSection(),
-                        const SizedBox(height: 20),
-                      ],
+                          // Prompts
+                          if (match.prompts.isNotEmpty) ...[
+                            _buildPromptsSection(),
+                            const SizedBox(height: 20),
+                          ],
 
-                      // Lifestyle & Habits
-                      _buildLifestyleSection(),
-                      const SizedBox(height: 20),
+                          // Lifestyle & Habits
+                          _buildLifestyleSection(),
+                          const SizedBox(height: 20),
 
-                      // Interests
-                      _buildInterestsSection(),
-                      const SizedBox(height: 20),
+                          // Interests
+                          _buildInterestsSection(),
+                          const SizedBox(height: 20),
 
-                      // Personality
-                      if (match.introvertLevel != null)
-                        _buildPersonalitySection(context),
+                          // Personality
+                          if (match.introvertLevel != null)
+                            _buildPersonalitySection(context),
 
-                      const SizedBox(height: 40),
-                    ],
+                          const SizedBox(height: 40),
+
+                          // Action Buttons at the bottom
+                          _buildActionButtons(context, ref),
+                          const SizedBox(height: 60),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Custom Back Button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 20,
+                child: CircleAvatar(
+                  backgroundColor: Colors.black45,
+                  child: IconButton(
+                    icon:
+                        const Icon(LucideIcons.arrowLeft, color: Colors.white),
+                    onPressed: () => _showExitWarning(context, ref),
                   ),
                 ),
               ),
             ],
           ),
+        ));
+  }
 
-          // Custom Back Button
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 20,
-            child: CircleAvatar(
-              backgroundColor: Colors.black45,
-              child: IconButton(
-                icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
-                onPressed: () => context.pop(),
-              ),
-            ),
+  void _showExitWarning(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text("Opozorilo",
+            style: GoogleFonts.outfit(
+                color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text(
+            "Če greš ven, se bo zaznamovalo, kot da si osebo zignoriral.",
+            style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop(); // Close dialog
+              ref.read(matchControllerProvider.notifier).dismiss();
+              if (context.canPop()) {
+                context.pop(); // Pop from profile screen
+              }
+            },
+            child:
+                const Text("Ignore", style: TextStyle(color: Colors.redAccent)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop(); // Close dialog
+              ref.read(matchControllerProvider.notifier).dismiss();
+              if (context.canPop()) {
+                context.pop(); // Pop from profile screen
+              }
+            },
+            child: const Text("Match again in future",
+                style: TextStyle(color: Colors.pinkAccent)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, WidgetRef ref) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _ActionButton(
+          icon: LucideIcons.x,
+          color: Colors.redAccent,
+          onTap: () {
+            ref.read(matchControllerProvider.notifier).dismiss();
+            if (context.canPop()) {
+              context.pop();
+            }
+          },
+        ),
+        _ActionButton(
+          icon: LucideIcons.check,
+          color: Colors.greenAccent,
+          onTap: () {
+            ref.read(matchControllerProvider.notifier).like();
+
+            // Set strong directional ping on radar
+            ref.read(pingDistanceProvider.notifier).state = 0.8; // Edge
+            ref.read(pingAngleProvider.notifier).state =
+                0.5; // Example angle, adjust as needed
+
+            if (context.canPop()) {
+              context.pop();
+            }
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Pozdrav poslan ${match.name}!")),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -445,6 +534,36 @@ class ProfileDetailScreen extends StatelessWidget {
           ),
         )
       ],
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton(
+      {required this.icon, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.6),
+            shape: BoxShape.circle,
+            border: Border.all(color: color, width: 2),
+            boxShadow: [
+              BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  spreadRadius: 2)
+            ]),
+        child: Icon(icon, color: color, size: 36),
+      ),
     );
   }
 }

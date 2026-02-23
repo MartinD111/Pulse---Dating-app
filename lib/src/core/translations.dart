@@ -15,14 +15,62 @@ String t(String key, String lang) {
 
 /// Available languages in alphabetical order (by display name)
 const List<Map<String, String>> availableLanguages = [
-  {'code': 'de', 'label': '🇩🇪 Deutsch'},
-  {'code': 'en', 'label': '🇬🇧 English'},
-  {'code': 'fr', 'label': '🇫🇷 Français'},
-  {'code': 'hr', 'label': '🇭🇷 Hrvatski'},
-  {'code': 'it', 'label': '🇮🇹 Italiano'},
-  {'code': 'hu', 'label': '🇭🇺 Magyar'},
-  {'code': 'sr', 'label': '🇷🇸 Srpski'},
-  {'code': 'sl', 'label': '🇸🇮 Slovenščina'},
+  {
+    'code': 'de',
+    'label': '🇩🇪 Deutsch',
+    'englishName': 'German',
+    'nativeName': 'Deutsch',
+    'translationKey': 'lang_german'
+  },
+  {
+    'code': 'en',
+    'label': '🇬🇧 English',
+    'englishName': 'English',
+    'nativeName': 'English',
+    'translationKey': 'lang_english'
+  },
+  {
+    'code': 'fr',
+    'label': '🇫🇷 Français',
+    'englishName': 'French',
+    'nativeName': 'Français',
+    'translationKey': 'lang_french'
+  },
+  {
+    'code': 'hr',
+    'label': '🇭🇷 Hrvatski',
+    'englishName': 'Croatian',
+    'nativeName': 'Hrvatski',
+    'translationKey': 'lang_croatian'
+  },
+  {
+    'code': 'hu',
+    'label': '🇭🇺 Magyar',
+    'englishName': 'Hungarian',
+    'nativeName': 'Magyar',
+    'translationKey': 'lang_hungarian'
+  },
+  {
+    'code': 'it',
+    'label': '🇮🇹 Italiano',
+    'englishName': 'Italian',
+    'nativeName': 'Italiano',
+    'translationKey': 'lang_italian'
+  },
+  {
+    'code': 'sl',
+    'label': '🇸🇮 Slovenščina',
+    'englishName': 'Slovenian',
+    'nativeName': 'Slovenščina',
+    'translationKey': 'lang_slovenian'
+  },
+  {
+    'code': 'sr',
+    'label': '🇷🇸 Srpski',
+    'englishName': 'Serbian',
+    'nativeName': 'Srpski',
+    'translationKey': 'lang_serbian'
+  },
 ];
 
 const Map<String, Map<String, String>> _translations = {
@@ -202,6 +250,9 @@ const Map<String, Map<String, String>> _translations = {
     'new_password': 'New Password',
     'confirm_password': 'Confirm New Password',
     'password_changed': 'Password changed successfully',
+    'premium_free_notice':
+        'Premium account is currently free for all users until we reach 10,000 registered users in your country.',
+    'current_users_count': 'Current users in your country: {count}/10,000',
     // --- New Registration ---
     'continue_btn': 'Continue',
     'whats_your_name': "What's your name?",
@@ -285,6 +336,40 @@ const Map<String, Map<String, String>> _translations = {
     'partner_smokes_q': 'Partner smokes?',
     'no_pref': 'No',
     'idc': "I don't care",
+    // --- Religion ---
+    'religion': 'Religion',
+    'christianity': 'Christianity',
+    'islam': 'Islam',
+    'hinduism': 'Hinduism',
+    'buddhism': 'Buddhism',
+    'judaism': 'Judaism',
+    'agnostic': 'Agnostic',
+    'atheist': 'Atheist',
+
+    // --- Ethnicity ---
+    'ethnicity': 'Ethnicity',
+    'ethnicity_white': 'White',
+    'ethnicity_black': 'Black',
+    'ethnicity_mixed': 'Mixed',
+    'ethnicity_asian': 'Asian',
+
+    // --- Hair Color ---
+    'hair_color': 'Hair Color',
+    'hair_blonde': 'Blonde',
+    'hair_brunette': 'Brunette',
+    'hair_black': 'Black',
+    'hair_red': 'Red',
+    'hair_gray_white': 'Gray/White',
+    'hair_other': 'Other',
+
+    // --- Political Affiliation ---
+    'political_affiliation': 'Political affiliation',
+    'politics_left': 'Left',
+    'politics_center_left': 'Center-left',
+    'politics_center': 'Center',
+    'politics_center_right': 'Center-right',
+    'politics_right': 'Right',
+
     'distance': 'Distance',
     'battery_warning': 'This function uses {percent}% more battery than usual.',
     'auto_hide_nav': 'Auto hide navigation bar',
@@ -439,6 +524,10 @@ const Map<String, Map<String, String>> _translations = {
     'new_password': 'Novo geslo',
     'confirm_password': 'Potrdi novo geslo',
     'password_changed': 'Geslo uspešno spremenjeno',
+    'premium_free_notice':
+        'Premium račun je na voljo za vse uporabnike gratis, dokler se ne doseže baza 10.000 uporabnikov v tvoji državi.',
+    'current_users_count':
+        'Trenutno uporabnikov v tvoji državi: {count}/10.000',
     // --- Nova registracija ---
     'continue_btn': 'Nadaljuj',
     'whats_your_name': 'Kako ti je ime?',
@@ -522,6 +611,40 @@ const Map<String, Map<String, String>> _translations = {
     'partner_smokes_q': 'Partner kadi?',
     'no_pref': 'No',
     'idc': "I don't care",
+    // --- Religion ---
+    'religion': 'Vera',
+    'christianity': 'Krščanstvo',
+    'islam': 'Islam',
+    'hinduism': 'Hinduizem',
+    'buddhism': 'Budizem',
+    'judaism': 'Judaizem',
+    'agnostic': 'Agnostik',
+    'atheist': 'Ateist',
+
+    // --- Ethnicity ---
+    'ethnicity': 'Etnična pripadnost',
+    'ethnicity_white': 'Belec',
+    'ethnicity_black': 'Temnopolt',
+    'ethnicity_mixed': 'Mešano',
+    'ethnicity_asian': 'Azijec',
+
+    // --- Hair Color ---
+    'hair_color': 'Barva las',
+    'hair_blonde': 'Blond',
+    'hair_brunette': 'Rjavi',
+    'hair_black': 'Črni',
+    'hair_red': 'Rdeči',
+    'hair_gray_white': 'Sivi/Beli',
+    'hair_other': 'Drugo',
+
+    // --- Political Affiliation ---
+    'political_affiliation': 'Politično prepričanje',
+    'politics_left': 'Levo',
+    'politics_center_left': 'Srednje levo',
+    'politics_center': 'Center',
+    'politics_center_right': 'Srednje desno',
+    'politics_right': 'Desno',
+
     'distance': 'Razdalja',
     'battery_warning':
         'Ta funkcija porabi {percent}% več baterije kot običajno.',

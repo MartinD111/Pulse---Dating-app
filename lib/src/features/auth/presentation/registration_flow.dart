@@ -92,6 +92,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final TextEditingController _customPetController = TextEditingController();
   int _languagesCount = 1;
 
+  // New fields
+  String? _religion;
+  String? _ethnicity;
+  String? _hairColor;
+  double _politicalAffiliationValue = 3.0; // 1 to 5 mapping (Left to Right)
+
   // Dating pref
   String? _datingPreference;
   RangeValues _ageRangePref = const RangeValues(18, 50);
@@ -272,14 +278,14 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 11;
+    const totalSteps = 14;
     int step;
     if (_currentPage <= 4) {
       step = _currentPage + 1;
-    } else if (_currentPage <= 9) {
+    } else if (_currentPage <= 12) {
       step = 6;
     } else {
-      step = _currentPage - 3; // 10→7, 11→8, 12→9, 13→10, 14→11
+      step = _currentPage - 6;
     }
     final progress = step / totalSteps;
     return TweenAnimationBuilder<double>(
@@ -392,6 +398,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildPageIntroversion(),
                 _buildPageSleep(),
                 _buildPagePets(),
+                _buildPageReligion(),
+                _buildPageEthnicity(),
+                _buildPageHairColor(),
+                _buildPagePoliticalAffiliation(),
                 _buildPageLanguages(),
                 _buildPageDatingPreferences(),
                 _buildPageWhatToMeet(),
@@ -1081,14 +1091,35 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _menuRow(tr('pets'), LucideIcons.dog, petLabel(),
                     () => _goToPage(14)),
                 const Divider(color: Colors.white12),
+                _menuRow(
+                    tr('religion'),
+                    LucideIcons.heart,
+                    _religion != null ? tr(_religion!) : '',
+                    () => _goToPage(15)),
+                const Divider(color: Colors.white12),
+                _menuRow(
+                    tr('ethnicity'),
+                    LucideIcons.users,
+                    _ethnicity != null ? tr('ethnicity_$_ethnicity') : '',
+                    () => _goToPage(16)),
+                const Divider(color: Colors.white12),
+                _menuRow(
+                    tr('hair_color'),
+                    LucideIcons.scissors,
+                    _hairColor != null ? tr('hair_$_hairColor') : '',
+                    () => _goToPage(17)),
+                const Divider(color: Colors.white12),
+                _menuRow(tr('political_affiliation'), LucideIcons.flag, '',
+                    () => _goToPage(18)),
+                const Divider(color: Colors.white12),
                 _menuRow(tr('i_speak'), LucideIcons.languages,
-                    '$_languagesCount', () => _goToPage(15)),
+                    '$_languagesCount', () => _goToPage(19)),
               ],
             ),
           ),
           _continueButton(
             enabled: allFilled,
-            onTap: () => _goToPage(16),
+            onTap: () => _goToPage(20),
           ),
           const SizedBox(height: 16),
         ]),
@@ -1122,6 +1153,122 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 style: const TextStyle(color: Color(0xFF00D9A6), fontSize: 14)),
           const SizedBox(width: 8),
           const Icon(Icons.chevron_right, color: Colors.white30, size: 20),
+        ]),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE RELIGION
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageReligion() {
+    return _subScreen(
+      title: tr('religion'),
+      backTarget: 7,
+      options: [
+        {'key': 'christianity', 'label': tr('christianity')},
+        {'key': 'islam', 'label': tr('islam')},
+        {'key': 'hinduism', 'label': tr('hinduism')},
+        {'key': 'buddhism', 'label': tr('buddhism')},
+        {'key': 'judaism', 'label': tr('judaism')},
+        {'key': 'agnostic', 'label': tr('agnostic')},
+        {'key': 'atheist', 'label': tr('atheist')},
+      ],
+      selected: _religion,
+      onSelect: (val) {
+        setState(() => _religion = val);
+        _goToPage(7);
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE ETHNICITY
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageEthnicity() {
+    return _subScreen(
+      title: tr('ethnicity'),
+      backTarget: 7,
+      options: [
+        {'key': 'white', 'label': tr('ethnicity_white')},
+        {'key': 'black', 'label': tr('ethnicity_black')},
+        {'key': 'mixed', 'label': tr('ethnicity_mixed')},
+        {'key': 'asian', 'label': tr('ethnicity_asian')},
+      ],
+      selected: _ethnicity,
+      onSelect: (val) {
+        setState(() => _ethnicity = val);
+        _goToPage(7);
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE HAIR COLOR
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageHairColor() {
+    return _subScreen(
+      title: tr('hair_color'),
+      backTarget: 7,
+      options: [
+        {'key': 'blonde', 'label': tr('hair_blonde')},
+        {'key': 'brunette', 'label': tr('hair_brunette')},
+        {'key': 'black', 'label': tr('hair_black')},
+        {'key': 'red', 'label': tr('hair_red')},
+        {'key': 'gray_white', 'label': tr('hair_gray_white')},
+        {'key': 'other', 'label': tr('hair_other')},
+      ],
+      selected: _hairColor,
+      onSelect: (val) {
+        setState(() => _hairColor = val);
+        _goToPage(7);
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE POLITICAL AFFILIATION
+  // ══════════════════════════════════════════════════════
+  Widget _buildPagePoliticalAffiliation() {
+    final labels = [
+      tr('politics_left'),
+      tr('politics_center_left'),
+      tr('politics_center'),
+      tr('politics_center_right'),
+      tr('politics_right')
+    ];
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(children: [
+          _backButtonTo(7),
+          const SizedBox(height: 40),
+          _stepHeader(tr('political_affiliation')),
+          const SizedBox(height: 80),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text(tr('politics_left'),
+                style: const TextStyle(color: Colors.white70)),
+            Text(tr('politics_right'),
+                style: const TextStyle(color: Colors.white70)),
+          ]),
+          Slider(
+            value: _politicalAffiliationValue,
+            min: 1,
+            max: 5,
+            divisions: 4,
+            onChanged: (v) => setState(() => _politicalAffiliationValue = v),
+            activeColor: const Color(0xFF00D9A6),
+            inactiveColor: Colors.white12,
+          ),
+          const SizedBox(height: 16),
+          Text(labels[_politicalAffiliationValue.toInt() - 1],
+              style: const TextStyle(
+                  color: Color(0xFF00D9A6),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold)),
+          const Spacer(),
+          _continueButton(enabled: true, onTap: () => _goToPage(7)),
+          const SizedBox(height: 16),
         ]),
       ),
     );
@@ -1887,6 +2034,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       sleepSchedule: 'Nočna ptica',
       petPreference: 'Dog person',
       childrenPreference: _childrenPreference ?? 'not_sure',
+      religion: _religion,
+      ethnicity: _ethnicity,
+      hairColor: _hairColor,
+      politicalAffiliation: [
+        'politics_left',
+        'politics_center_left',
+        'politics_center',
+        'politics_center_right',
+        'politics_right'
+      ][_politicalAffiliationValue.toInt() - 1],
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],

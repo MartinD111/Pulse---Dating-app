@@ -126,75 +126,11 @@ class MatchDialog extends ConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // Action Buttons (Outside the card)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Confirm/Tick Button (LEFT)
-                  _ActionButton(
-                    icon: LucideIcons.check,
-                    color: Colors.greenAccent,
-                    onTap: () {
-                      ref.read(matchControllerProvider.notifier).like();
-                      if (context.canPop()) {
-                        context.pop();
-                      }
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Pozdrav poslan ${match.name}!")),
-                      );
-                    },
-                  ),
-
-                  // Ignore/X Button (RIGHT)
-                  _ActionButton(
-                    icon: LucideIcons.x,
-                    color: Colors.redAccent,
-                    onTap: () {
-                      ref.read(matchControllerProvider.notifier).dismiss();
-                      if (context.canPop()) {
-                        context.pop(); // Explicitly close the dialog
-                      }
-                    },
-                  ),
-                ],
-              ),
+              // Extra spacing at the bottom since buttons are removed
+              const SizedBox(height: 10),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ActionButton(
-      {required this.icon, required this.color, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: Colors.black
-                .withValues(alpha: 0.6), // Dark background for buttons
-            shape: BoxShape.circle,
-            border: Border.all(color: color, width: 2),
-            boxShadow: [
-              BoxShadow(
-                  color: color.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  spreadRadius: 2)
-            ]),
-        child: Icon(icon, color: color, size: 32),
       ),
     );
   }

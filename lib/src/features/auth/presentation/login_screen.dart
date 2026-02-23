@@ -126,7 +126,43 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
+
+                    // Premium Free Notice Pill
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                            color:
+                                const Color(0xFF00D9A6).withValues(alpha: 0.3)),
+                      ),
+                      child: Column(children: [
+                        Text(
+                          tr('premium_free_notice'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          tr('current_users_count')
+                              .replaceAll('{count}', '4.832'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Color(0xFF00D9A6),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ]),
+                    ),
+                    const SizedBox(height: 24),
 
                     if (_isLoading)
                       const CircularProgressIndicator(color: Colors.white)
@@ -171,33 +207,33 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
             Positioned(
               top: 50,
               right: 20,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: lang,
-                    dropdownColor: const Color(0xFF1E1E2E),
-                    icon: const Icon(Icons.language,
-                        color: Colors.white70, size: 18),
-                    items: availableLanguages.map((l) {
-                      return DropdownMenuItem(
-                        value: l['code'],
-                        child: Text(l['label']!,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 14)),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        ref.read(appLanguageProvider.notifier).state = val;
-                      }
-                    },
+              child: GestureDetector(
+                onTap: () {
+                  _showLanguagePicker(context, lang, ref);
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.language,
+                          color: Colors.white70, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        availableLanguages.firstWhere((l) => l['code'] == lang,
+                            orElse: () => availableLanguages.first)['label']!,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.arrow_drop_down,
+                          color: Colors.white70, size: 18),
+                    ],
                   ),
                 ),
               ),
@@ -205,6 +241,133 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLanguagePicker(
+      BuildContext context, String currentLang, WidgetRef ref) {
+    String tr(String key) => t(key, currentLang);
+    final isSlovenian = currentLang == 'sl';
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E2E),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setStateB) {
+            String searchQuery = "";
+            final filteredLangs = availableLanguages.where((l) {
+              if (searchQuery.isEmpty) return true;
+              final q = searchQuery.toLowerCase();
+              final enName = l['englishName']?.toLowerCase() ?? '';
+              final natName = l['nativeName']?.toLowerCase() ?? '';
+              final trName = tr(l['translationKey'] ?? '').toLowerCase();
+              return enName.contains(q) ||
+                  natName.contains(q) ||
+                  trName.contains(q);
+            }).toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSlovenian ? 'Izberi jezik' : 'Select Language',
+                      style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      onChanged: (val) => setStateB(() => searchQuery = val),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: isSlovenian ? "Išči..." : "Search...",
+                        hintStyle: const TextStyle(color: Colors.white30),
+                        prefixIcon: const Icon(LucideIcons.search,
+                            color: Colors.white54),
+                        filled: true,
+                        fillColor: Colors.white10,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: filteredLangs.length,
+                        itemBuilder: (context, index) {
+                          final l = filteredLangs[index];
+                          final isSelected = l['code'] == currentLang;
+                          return InkWell(
+                            onTap: () {
+                              ref.read(appLanguageProvider.notifier).state =
+                                  l['code']!;
+                              Navigator.pop(ctx);
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 16),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF00D9A6)
+                                        .withValues(alpha: 0.2)
+                                    : Colors.white.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF00D9A6)
+                                      : Colors.transparent,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    l['label']!,
+                                    style: TextStyle(
+                                      color: isSelected
+                                          ? Colors.white
+                                          : Colors.white70,
+                                      fontSize: 16,
+                                      fontWeight: isSelected
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  if (isSelected)
+                                    const Icon(Icons.check_circle,
+                                        color: Color(0xFF00D9A6), size: 20),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
