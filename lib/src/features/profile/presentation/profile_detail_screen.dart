@@ -7,6 +7,8 @@ import '../../../shared/ui/gradient_scaffold.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../matches/data/match_repository.dart';
 import '../../dashboard/presentation/home_screen.dart'; // For tracking ping/radar
+import '../../auth/data/auth_repository.dart';
+import '../../../core/translations.dart';
 
 class ProfileDetailScreen extends ConsumerWidget {
   final MatchProfile match;
@@ -44,7 +46,7 @@ class ProfileDetailScreen extends ConsumerWidget {
                           ],
 
                           // Basic Info (Job, School, etc.)
-                          _buildInfoBadges(),
+                          _buildInfoBadges(context, ref),
                           const SizedBox(height: 20),
 
                           // Prompts
@@ -322,12 +324,14 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildInfoBadges() {
+  Widget _buildInfoBadges(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authStateProvider);
+    final lang = user?.appLanguage ?? 'en';
     final items = <Widget>[];
 
     void addBadge(IconData icon, String text, [Color? color]) {
       items.add(Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: Colors.white10,
           borderRadius: BorderRadius.circular(20),
@@ -336,25 +340,44 @@ class ProfileDetailScreen extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: color ?? Colors.white70),
-            const SizedBox(width: 8),
-            Text(text, style: const TextStyle(color: Colors.white)),
+            Icon(icon, size: 12, color: color ?? Colors.white70),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(text,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+            )
           ],
         ),
       ));
     }
 
+    if (match.height != null) {
+      addBadge(LucideIcons.ruler, '${match.height} cm');
+    }
     if (match.jobTitle != null) {
       addBadge(LucideIcons.briefcase, match.jobTitle!);
     }
     if (match.school != null) {
       addBadge(LucideIcons.graduationCap, match.school!);
     }
+    if (match.politicalAffiliation != null &&
+        match.politicalAffiliation != 'politics_dont_care' &&
+        match.politicalAffiliation != 'politics_undisclosed') {
+      addBadge(LucideIcons.flag, t(match.politicalAffiliation!, lang));
+    }
+    if (match.religion != null) {
+      addBadge(LucideIcons.heart, t(match.religion!, lang));
+    }
+    if (match.ethnicity != null) {
+      addBadge(LucideIcons.users, t('ethnicity_${match.ethnicity}', lang));
+    }
+
     addBadge(LucideIcons.mapPin, "Ljubljana, 2km", Colors.pinkAccent);
 
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 6,
+      runSpacing: 6,
       children: items,
     );
   }
@@ -400,15 +423,19 @@ class ProfileDetailScreen extends ConsumerWidget {
             child: Icon(icon, size: 20, color: Colors.white70),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
-              Text(value,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w500)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style:
+                        const TextStyle(color: Colors.white54, fontSize: 12)),
+                Text(value,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w500)),
+              ],
+            ),
           )
         ],
       );
@@ -437,6 +464,10 @@ class ProfileDetailScreen extends ConsumerWidget {
           match.petPreference == 'Dog person'
               ? '🐶 Dog person'
               : '🐱 Cat person'));
+    }
+    if (match.childrenPreference != null) {
+      habits.add(buildHabitItem(
+          LucideIcons.baby, "Otroci", match.childrenPreference!));
     }
 
     return Column(

@@ -225,6 +225,9 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
   Widget _buildInfoBadges(AuthUser user) {
     final badges = <Widget>[];
 
+    if (user.height != null) {
+      badges.add(_badge(LucideIcons.ruler, '${user.height} cm'));
+    }
     if (user.gender != null) {
       badges.add(_badge(
           user.gender == 'Moški' ? LucideIcons.user : LucideIcons.user,
@@ -236,18 +239,32 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     if (user.isSmoker == true) {
       badges.add(_badge(LucideIcons.cigarette, t('smoker', user.appLanguage)));
     }
+    if (user.politicalAffiliation != null &&
+        user.politicalAffiliation != 'politics_dont_care' &&
+        user.politicalAffiliation != 'politics_undisclosed') {
+      badges.add(_badge(
+          LucideIcons.flag, t(user.politicalAffiliation!, user.appLanguage)));
+    }
+    if (user.religion != null) {
+      badges
+          .add(_badge(LucideIcons.heart, t(user.religion!, user.appLanguage)));
+    }
+    if (user.ethnicity != null) {
+      badges.add(_badge(LucideIcons.users,
+          t('ethnicity_${user.ethnicity}', user.appLanguage)));
+    }
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.center,
+      spacing: 6,
+      runSpacing: 6,
+      alignment: WrapAlignment.start,
       children: badges,
     );
   }
 
   Widget _badge(IconData icon, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
@@ -256,10 +273,13 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.white60),
-          const SizedBox(width: 6),
-          Text(text,
-              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          Icon(icon, size: 12, color: Colors.white60),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(text,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          ),
         ],
       ),
     );
@@ -316,16 +336,20 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.white54),
+          Icon(icon, size: 16, color: Colors.white54),
           const SizedBox(width: 10),
           Text(label,
               style: const TextStyle(color: Colors.white54, fontSize: 13)),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500)),
+          Flexible(
+            child: Text(value,
+                textAlign: TextAlign.right,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
+          ),
         ],
       ),
     );

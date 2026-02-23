@@ -524,6 +524,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           ),
           const SizedBox(height: 20),
 
+          // Height Range - PREMIUM
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text("${_t('whats_your_height')} (cm)",
+                      style: const TextStyle(color: Colors.white)),
+                  if (!user.isPremium) ...[
+                    const SizedBox(width: 8),
+                    const Icon(LucideIcons.lock, size: 14, color: Colors.amber),
+                  ]
+                ],
+              ),
+              Text(
+                  "${user.heightRangeStart ?? 130} - ${user.heightRangeEnd ?? 250}",
+                  style: const TextStyle(color: Colors.white70)),
+            ],
+          ),
+          RangeSlider(
+            values: RangeValues((user.heightRangeStart ?? 130).toDouble(),
+                (user.heightRangeEnd ?? 250).toDouble()),
+            min: 130,
+            max: 250,
+            divisions: 120,
+            activeColor: Colors.pinkAccent,
+            inactiveColor: Colors.white24,
+            labels: RangeLabels(
+              (user.heightRangeStart ?? 130).toString(),
+              (user.heightRangeEnd ?? 250).toString(),
+            ),
+            onChanged: (RangeValues values) {
+              if (user.isPremium) {
+                _updateProfile(user.copyWith(
+                  heightRangeStart: values.start.round(),
+                  heightRangeEnd: values.end.round(),
+                ));
+              }
+            },
+          ),
+          const SizedBox(height: 20),
+
           // Interested In
           Text(_t('who_looking_for'),
               style: const TextStyle(color: Colors.white)),
@@ -673,9 +715,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                   'value': 'politics_center_right'
                 },
                 {'label': _t('politics_right'), 'value': 'politics_right'},
+                {
+                  'label': _t('politics_match_any'),
+                  'value': 'politics_match_any'
+                },
+                {
+                  'label': _t('politics_dont_care'),
+                  'value': 'politics_dont_care'
+                },
+                {
+                  'label': _t('politics_undisclosed'),
+                  'value': 'politics_undisclosed'
+                },
               ],
-              onUpdate: (val) => _updateProfile(
-                  user.copyWith(politicalAffiliationPreference: val))),
+              onUpdate: (val) {
+                _updateProfile(
+                    user.copyWith(politicalAffiliationPreference: val));
+                if (val != 'politics_match_any' &&
+                    val != 'politics_dont_care' &&
+                    val != 'politics_undisclosed') {
+                  // Show info dialog
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: const Color(0xFF1E1E2E),
+                      title: Text(_t('politics_popup_title'),
+                          style: const TextStyle(color: Colors.white)),
+                      content: Text(_t('politics_popup_body'),
+                          style: const TextStyle(color: Colors.white70)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('OK',
+                              style: TextStyle(color: Color(0xFF00D9A6))),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              }),
           const SizedBox(height: 20),
 
           // Introvert/Extrovert

@@ -257,6 +257,10 @@ const Map<String, Map<String, String>> _translations = {
     'continue_btn': 'Continue',
     'whats_your_name': "What's your name?",
     'name_hint': 'Your first name',
+    'whats_your_height': "What's your height?",
+    'height_hint': 'Height in cm or ft/in',
+    'height_cm': 'cm',
+    'height_ft_in': 'ft/in',
     'whats_your_gender': "What's your gender?",
     'non_binary': 'Non-Binary',
     'gender_nonbinary_popup_title': 'Heads up!',
@@ -369,6 +373,12 @@ const Map<String, Map<String, String>> _translations = {
     'politics_center': 'Center',
     'politics_center_right': 'Center-right',
     'politics_right': 'Right',
+    'politics_dont_care': "I don't care about politics",
+    'politics_undisclosed': "I don't want to say",
+    'politics_match_any': "I don't care",
+    'politics_popup_title': 'Political Matching',
+    'politics_popup_body':
+        'You will be matched with people who have selected the same or adjacent political views.',
 
     'distance': 'Distance',
     'battery_warning': 'This function uses {percent}% more battery than usual.',
@@ -532,6 +542,10 @@ const Map<String, Map<String, String>> _translations = {
     'continue_btn': 'Nadaljuj',
     'whats_your_name': 'Kako ti je ime?',
     'name_hint': 'Tvoje ime',
+    'whats_your_height': 'Koliko si visok/-a?',
+    'height_hint': 'Višina v cm ali ft/in',
+    'height_cm': 'cm',
+    'height_ft_in': 'ft/in',
     'whats_your_gender': 'Kakšen/-a si spol?',
     'non_binary': 'Nebinarno',
     'gender_nonbinary_popup_title': 'Pozor!',
@@ -644,6 +658,12 @@ const Map<String, Map<String, String>> _translations = {
     'politics_center': 'Center',
     'politics_center_right': 'Srednje desno',
     'politics_right': 'Desno',
+    'politics_dont_care': 'Me ne zanima politika',
+    'politics_undisclosed': 'Ne želim povedati',
+    'politics_match_any': 'Vseeno mi je',
+    'politics_popup_title': 'Ujemanje po politiki',
+    'politics_popup_body':
+        'Ujemali se boste z osebami, ki so izbrale enako ali podobno politično prepričanje.',
 
     'distance': 'Razdalja',
     'battery_warning':

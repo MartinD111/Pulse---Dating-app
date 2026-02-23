@@ -14,6 +14,11 @@ class AuthUser {
   final String? email;
   final String? password;
 
+  // Physical Attributes
+  final int? height; // stored in cm
+  final int? heightRangeStart;
+  final int? heightRangeEnd;
+
   // New Preferences
   final bool? isSmoker; // User's status
   final String? partnerSmokingPreference; // 'Ne', 'Vseeno'
@@ -64,6 +69,9 @@ class AuthUser {
     this.birthDate,
     this.email,
     this.password,
+    this.height,
+    this.heightRangeStart,
+    this.heightRangeEnd,
     this.photoUrls = const [],
     this.gender,
     this.interestedIn,
@@ -110,6 +118,9 @@ class AuthUser {
     DateTime? birthDate,
     String? email,
     String? password,
+    int? height,
+    int? heightRangeStart,
+    int? heightRangeEnd,
     List<String>? photoUrls,
     String? gender,
     String? interestedIn,
@@ -155,6 +166,9 @@ class AuthUser {
       birthDate: birthDate ?? this.birthDate,
       email: email ?? this.email,
       password: password ?? this.password,
+      height: height ?? this.height,
+      heightRangeStart: heightRangeStart ?? this.heightRangeStart,
+      heightRangeEnd: heightRangeEnd ?? this.heightRangeEnd,
       photoUrls: photoUrls ?? this.photoUrls,
       gender: gender ?? this.gender,
       interestedIn: interestedIn ?? this.interestedIn,

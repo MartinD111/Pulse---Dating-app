@@ -10,6 +10,10 @@ class MatchProfile {
   final String bio;
 
   // New Fields
+  final int? height;
+  final String? politicalAffiliation;
+  final String? religion;
+  final String? ethnicity;
   final String? jobTitle;
   final String? company;
   final String? school;
@@ -23,6 +27,7 @@ class MatchProfile {
   final String? exerciseHabit; // 'Včasih', 'Ne', 'Redno', 'Zelo aktiven'
   final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
   final String? petPreference; // 'Dog person', 'Cat person'
+  final String? childrenPreference; // 'Da', 'Ne', 'Da, ampak kasneje'
   final List<String> lookingFor;
 
   const MatchProfile({
@@ -32,6 +37,10 @@ class MatchProfile {
     required this.imageUrl,
     required this.hobbies,
     required this.bio,
+    this.height,
+    this.politicalAffiliation,
+    this.religion,
+    this.ethnicity,
     this.jobTitle,
     this.company,
     this.school,
@@ -43,6 +52,7 @@ class MatchProfile {
     this.exerciseHabit,
     this.sleepSchedule,
     this.petPreference,
+    this.childrenPreference,
     this.lookingFor = const [],
   });
 }
@@ -59,6 +69,10 @@ class MatchRepository {
     jobTitle: 'Grafična Oblikovalka',
     company: 'Freelance',
     school: 'ALUO',
+    height: 172,
+    politicalAffiliation: 'politics_center_left',
+    religion: 'agnostic',
+    ethnicity: 'white',
     isSmoker: false,
     drinkingHabit: 'Družabno',
     introvertLevel: 4,
@@ -66,6 +80,7 @@ class MatchRepository {
     exerciseHabit: 'Redno',
     sleepSchedule: 'Nočna ptica',
     petPreference: 'Cat person',
+    childrenPreference: 'Da',
     lookingFor: ['Dolgoročno razmerje', 'Prijateljstvo'],
     prompts: [
       {

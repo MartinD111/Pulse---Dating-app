@@ -19,16 +19,17 @@ import '../../../core/translations.dart';
 // 2  : Name
 // 3  : Gender
 // 4  : Birthday
-// 5  : About you (menu list)
-// 6  : Exercise sub-screen
-// 7  : Drinking sub-screen
-// 8  : Smoking sub-screen
-// 9  : Children sub-screen
-// 10 : Dating preferences
-// 11 : What to meet
-// 12 : Hobbies
-// 13 : Photos
-// 14 : Prompt
+// 5  : Height
+// 6  : About you (menu list)
+// 7  : Exercise sub-screen
+// 8  : Drinking sub-screen
+// 9  : Smoking sub-screen
+// 10 : Children sub-screen
+// 11 : Dating preferences
+// 12 : What to meet
+// 13 : Hobbies
+// 14 : Photos
+// 15 : Prompt
 // ─────────────────────────────────────────────────────────────────────────────
 
 class RegistrationFlow extends ConsumerStatefulWidget {
@@ -79,6 +80,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   int _pickerYear = DateTime.now().year - 22;
   bool _birthdayConfirmed = false;
   DateTime? _birthDate;
+
+  // Height
+  int _heightCm = 170;
+  bool _isMetric = true;
 
   // About you lifestyle
   String? _exerciseHabit; // 'active' | 'sometimes' | 'almost_never'
@@ -278,12 +283,12 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
 
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 14;
+    const totalSteps = 15;
     int step;
-    if (_currentPage <= 4) {
+    if (_currentPage <= 5) {
       step = _currentPage + 1;
-    } else if (_currentPage <= 12) {
-      step = 6;
+    } else if (_currentPage <= 13) {
+      step = 7;
     } else {
       step = _currentPage - 6;
     }
@@ -390,6 +395,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildPageName(),
                 _buildPageGender(),
                 _buildPageBirthday(),
+                _buildPageHeight(),
                 _buildPageAboutYouMenu(),
                 _buildPageExercise(),
                 _buildPageDrinking(),
@@ -978,7 +984,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _birthdayConfirmed = true;
               });
               Navigator.pop(ctx);
-              _nextPage();
+              _nextPage(); // Go to height page
             },
             child: Container(
               width: double.infinity,
@@ -1012,7 +1018,134 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   // ══════════════════════════════════════════════════════
-  // PAGE 5 – ABOUT YOU MENU
+  // PAGE 5 – HEIGHT
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageHeight() {
+    // Generate height ranges
+    final cmItems = List.generate(121, (i) => '${130 + i}'); // 130 to 250 cm
+    final ftInItems = <String>[];
+    for (int f = 4; f <= 8; f++) {
+      for (int i = 0; i < 12; i++) {
+        if (f == 8 && i > 2) break; // max ~8'2"
+        ftInItems.add('$f\'$i"');
+      }
+    }
+
+    // Convert current cm to ft/in index
+    int ft = (_heightCm / 30.48).floor();
+    int inc = ((_heightCm / 2.54) - (ft * 12)).round();
+    if (inc == 12) {
+      ft++;
+      inc = 0;
+    }
+    int ftInIndex = ftInItems.indexOf('$ft\'$inc"');
+    if (ftInIndex == -1) ftInIndex = ftInItems.indexOf('5\'7"');
+
+    int cmIndex = cmItems.indexOf('$_heightCm');
+    if (cmIndex == -1) cmIndex = cmItems.indexOf('170');
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          _backButton(),
+          const SizedBox(height: 24),
+          _stepHeader(tr('whats_your_height')),
+          const SizedBox(height: 48),
+
+          // Unit Toggle
+          Center(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white12,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _isMetric = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _isMetric
+                            ? const Color(0xFF00D9A6)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(tr('height_cm'),
+                          style: TextStyle(
+                              color: _isMetric ? Colors.black : Colors.white70,
+                              fontWeight: _isMetric
+                                  ? FontWeight.bold
+                                  : FontWeight.w500)),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _isMetric = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: !_isMetric
+                            ? const Color(0xFF00D9A6)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Text(tr('height_ft_in'),
+                          style: TextStyle(
+                              color: !_isMetric ? Colors.black : Colors.white70,
+                              fontWeight: !_isMetric
+                                  ? FontWeight.bold
+                                  : FontWeight.w500)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 60),
+
+          // Pickers
+          Expanded(
+            child: Center(
+              child: SizedBox(
+                height: 200,
+                child: _isMetric
+                    ? _drumPicker(
+                        items: cmItems,
+                        selectedIndex: cmIndex,
+                        onChanged: (i) {
+                          setState(() => _heightCm = int.parse(cmItems[i]));
+                        })
+                    : _drumPicker(
+                        items: ftInItems,
+                        selectedIndex: ftInIndex,
+                        onChanged: (i) {
+                          // convert string like 5'7" to cm
+                          final str = ftInItems[i];
+                          final parts = str.split('\'');
+                          final feet = int.parse(parts[0]);
+                          final inches =
+                              int.parse(parts[1].replaceAll('"', ''));
+                          final cm = ((feet * 12 + inches) * 2.54).round();
+                          setState(() => _heightCm = cm);
+                        }),
+              ),
+            ),
+          ),
+
+          const Spacer(),
+          _continueButton(enabled: true, onTap: _nextPage),
+          const SizedBox(height: 16),
+        ]),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE 6 – ABOUT YOU MENU
   // ══════════════════════════════════════════════════════
   Widget _buildPageAboutYouMenu() {
     bool allFilled = _exerciseHabit != null &&
@@ -1071,55 +1204,55 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             child: ListView(
               children: [
                 _menuRow(tr('do_you_exercise'), LucideIcons.dumbbell,
-                    exerciseLabel(), () => _goToPage(8)),
+                    exerciseLabel(), () => _goToPage(9)),
                 const Divider(color: Colors.white12),
                 _menuRow(tr('do_you_drink'), LucideIcons.coffee, drinkLabel(),
-                    () => _goToPage(9)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('do_you_smoke'), LucideIcons.wind, smokeLabel(),
                     () => _goToPage(10)),
                 const Divider(color: Colors.white12),
+                _menuRow(tr('do_you_smoke'), LucideIcons.wind, smokeLabel(),
+                    () => _goToPage(11)),
+                const Divider(color: Colors.white12),
                 _menuRow(tr('do_you_want_children'), Icons.child_care,
-                    childrenLabel(), () => _goToPage(11)),
+                    childrenLabel(), () => _goToPage(12)),
                 const Divider(color: Colors.white12),
                 _menuRow(tr('introversion'), LucideIcons.user, '',
-                    () => _goToPage(12)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('sleep'), LucideIcons.moon, sleepLabel(),
                     () => _goToPage(13)),
                 const Divider(color: Colors.white12),
-                _menuRow(tr('pets'), LucideIcons.dog, petLabel(),
+                _menuRow(tr('sleep'), LucideIcons.moon, sleepLabel(),
                     () => _goToPage(14)),
+                const Divider(color: Colors.white12),
+                _menuRow(tr('pets'), LucideIcons.dog, petLabel(),
+                    () => _goToPage(15)),
                 const Divider(color: Colors.white12),
                 _menuRow(
                     tr('religion'),
                     LucideIcons.heart,
                     _religion != null ? tr(_religion!) : '',
-                    () => _goToPage(15)),
+                    () => _goToPage(16)),
                 const Divider(color: Colors.white12),
                 _menuRow(
                     tr('ethnicity'),
                     LucideIcons.users,
                     _ethnicity != null ? tr('ethnicity_$_ethnicity') : '',
-                    () => _goToPage(16)),
+                    () => _goToPage(17)),
                 const Divider(color: Colors.white12),
                 _menuRow(
                     tr('hair_color'),
                     LucideIcons.scissors,
                     _hairColor != null ? tr('hair_$_hairColor') : '',
-                    () => _goToPage(17)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('political_affiliation'), LucideIcons.flag, '',
                     () => _goToPage(18)),
                 const Divider(color: Colors.white12),
+                _menuRow(tr('political_affiliation'), LucideIcons.flag, '',
+                    () => _goToPage(19)),
+                const Divider(color: Colors.white12),
                 _menuRow(tr('i_speak'), LucideIcons.languages,
-                    '$_languagesCount', () => _goToPage(19)),
+                    '$_languagesCount', () => _goToPage(20)),
               ],
             ),
           ),
           _continueButton(
             enabled: allFilled,
-            onTap: () => _goToPage(20),
+            onTap: () => _goToPage(21),
           ),
           const SizedBox(height: 16),
         ]),
@@ -1164,7 +1297,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageReligion() {
     return _subScreen(
       title: tr('religion'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {'key': 'christianity', 'label': tr('christianity')},
         {'key': 'islam', 'label': tr('islam')},
@@ -1177,7 +1310,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _religion,
       onSelect: (val) {
         setState(() => _religion = val);
-        _goToPage(7);
+        _goToPage(6);
       },
     );
   }
@@ -1188,7 +1321,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageEthnicity() {
     return _subScreen(
       title: tr('ethnicity'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {'key': 'white', 'label': tr('ethnicity_white')},
         {'key': 'black', 'label': tr('ethnicity_black')},
@@ -1198,7 +1331,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _ethnicity,
       onSelect: (val) {
         setState(() => _ethnicity = val);
-        _goToPage(7);
+        _goToPage(6);
       },
     );
   }
@@ -1209,7 +1342,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageHairColor() {
     return _subScreen(
       title: tr('hair_color'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {'key': 'blonde', 'label': tr('hair_blonde')},
         {'key': 'brunette', 'label': tr('hair_brunette')},
@@ -1221,7 +1354,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _hairColor,
       onSelect: (val) {
         setState(() => _hairColor = val);
-        _goToPage(7);
+        _goToPage(6);
       },
     );
   }
@@ -1241,7 +1374,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(7),
+          _backButtonTo(6),
           const SizedBox(height: 40),
           _stepHeader(tr('political_affiliation')),
           const SizedBox(height: 80),
@@ -1266,8 +1399,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   color: Color(0xFF00D9A6),
                   fontSize: 18,
                   fontWeight: FontWeight.bold)),
+          const SizedBox(height: 32),
+          _optionPill(tr('politics_dont_care'), _politicalAffiliationValue == 0,
+              () {
+            setState(() => _politicalAffiliationValue = 0);
+          }),
+          _optionPill(
+              tr('politics_undisclosed'), _politicalAffiliationValue == -1, () {
+            setState(() => _politicalAffiliationValue = -1);
+          }),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(7)),
+          _continueButton(enabled: true, onTap: () => _goToPage(6)),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1280,7 +1422,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageExercise() {
     return _subScreen(
       title: tr('do_you_exercise'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {
           'key': 'active',
@@ -1302,7 +1444,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _exerciseHabit = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(7);
+          _goToPage(6);
         });
       },
     );
@@ -1314,7 +1456,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageDrinking() {
     return _subScreen(
       title: tr('do_you_drink'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {
           'key': 'socially',
@@ -1333,7 +1475,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _drinkingHabit = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(7);
+          _goToPage(6);
         });
       },
     );
@@ -1347,7 +1489,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _backButtonTo(7),
+          _backButtonTo(6),
           const SizedBox(height: 24),
           _stepHeader(tr('do_you_smoke')),
           const SizedBox(height: 32),
@@ -1368,7 +1510,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _continueButton(
             enabled: _smokingHabit != null &&
                 (_smokingHabit == 'yes' || _partnerSmokes != null),
-            onTap: () => _goToPage(7),
+            onTap: () => _goToPage(6),
           ),
           const SizedBox(height: 16),
         ]),
@@ -1417,7 +1559,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageChildren() {
     return _subScreen(
       title: tr('do_you_want_children'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {
           'key': 'want_someday',
@@ -1449,7 +1591,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _childrenPreference = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(7);
+          _goToPage(6);
         });
       },
     );
@@ -1463,7 +1605,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(7),
+          _backButtonTo(6),
           const SizedBox(height: 40),
           _stepHeader(tr('introversion')),
           const SizedBox(height: 80),
@@ -1480,7 +1622,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             inactiveColor: Colors.white12,
           ),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(7)),
+          _continueButton(enabled: true, onTap: () => _goToPage(6)),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1490,7 +1632,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageSleep() {
     return _subScreen(
       title: tr('sleep'),
-      backTarget: 7,
+      backTarget: 6,
       options: [
         {
           'key': 'night_owl',
@@ -1506,7 +1648,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _sleepHabit,
       onSelect: (k) {
         setState(() => _sleepHabit = k);
-        _goToPage(7);
+        _goToPage(6);
       },
     );
   }
@@ -1516,7 +1658,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(7),
+          _backButtonTo(6),
           const SizedBox(height: 24),
           _stepHeader(tr('pets')),
           const SizedBox(height: 24),
@@ -1545,7 +1687,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           _continueButton(
-              enabled: _petPreference != null, onTap: () => _goToPage(7)),
+              enabled: _petPreference != null, onTap: () => _goToPage(6)),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1557,7 +1699,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(7),
+          _backButtonTo(6),
           const SizedBox(height: 40),
           _stepHeader(tr('how_many_languages')),
           const SizedBox(height: 48),
@@ -1587,7 +1729,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             }),
           ),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(7)),
+          _continueButton(enabled: true, onTap: () => _goToPage(6)),
           const SizedBox(height: 16),
         ]),
       ),
@@ -2022,6 +2164,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       photoUrls: photoUrls,
       age: _birthDate != null ? _calcAge(_birthDate!) : 20,
       birthDate: _birthDate,
+      height: _heightCm, // Included height in cm
       gender: genderMap[_selectedGender ?? 'male'],
       location:
           _locationController.text.isNotEmpty ? _locationController.text : null,
@@ -2037,13 +2180,17 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       religion: _religion,
       ethnicity: _ethnicity,
       hairColor: _hairColor,
-      politicalAffiliation: [
-        'politics_left',
-        'politics_center_left',
-        'politics_center',
-        'politics_center_right',
-        'politics_right'
-      ][_politicalAffiliationValue.toInt() - 1],
+      politicalAffiliation: _politicalAffiliationValue == 0
+          ? 'politics_dont_care'
+          : _politicalAffiliationValue == -1
+              ? 'politics_undisclosed'
+              : [
+                  'politics_left',
+                  'politics_center_left',
+                  'politics_center',
+                  'politics_center_right',
+                  'politics_right'
+                ][_politicalAffiliationValue.toInt() - 1],
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],
