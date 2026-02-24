@@ -126,7 +126,69 @@ class MatchDialog extends ConsumerWidget {
                   ),
                 ),
               ),
-              // Extra spacing at the bottom since buttons are removed
+              const SizedBox(height: 16),
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Ignore Button
+                  GestureDetector(
+                    onTap: () {
+                      ref.read(matchControllerProvider.notifier).dismiss();
+                      if (context.canPop()) {
+                        context.pop();
+                      }
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24, width: 2),
+                      ),
+                      child: const Icon(Icons.close,
+                          color: Colors.white, size: 30),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                  // Greet Button
+                  GestureDetector(
+                    onTap: () {
+                      // Handle greet logic here
+                      ref.read(matchControllerProvider.notifier).dismiss();
+                      if (context.canPop()) {
+                        context.pop();
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Pozdrav poslan 👋")),
+                      );
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00D9A6),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                const Color(0xFF00D9A6).withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "👋",
+                          style: TextStyle(fontSize: 36),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 10),
             ],
           ),

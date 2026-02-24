@@ -95,9 +95,16 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   String? _sleepHabit; // 'night_owl' | 'early_bird'
   String? _petPreference; // 'dog' | 'cat' | 'something_else' | 'nothing'
   final TextEditingController _customPetController = TextEditingController();
-  int _languagesCount = 1;
+  final List<String> _selectedLanguages = [];
+  final TextEditingController _customLanguageController =
+      TextEditingController();
+  bool _showCustomLanguage = false;
 
   // New fields
+  String? _status; // 'student' | 'employed'
+  final TextEditingController _customOccupationController =
+      TextEditingController();
+
   String? _religion;
   String? _ethnicity;
   String? _hairColor;
@@ -268,31 +275,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             style: const TextStyle(color: Colors.white54, fontSize: 15)),
       );
 
-  Widget _backButtonTo(int page) => TextButton.icon(
-        onPressed: () {
-          _pageController.animateToPage(page,
-              duration: const Duration(milliseconds: 350),
-              curve: Curves.easeInOut);
-          setState(() => _currentPage = page);
-        },
-        icon: const Icon(Icons.arrow_back_ios_new,
-            color: Colors.white54, size: 16),
-        label: Text(tr('back'),
-            style: const TextStyle(color: Colors.white54, fontSize: 15)),
-      );
-
   // ────── PROGRESS BAR ──────
   Widget _buildProgressBar() {
-    const totalSteps = 15;
-    int step;
-    if (_currentPage <= 5) {
-      step = _currentPage + 1;
-    } else if (_currentPage <= 13) {
-      step = 7;
-    } else {
-      step = _currentPage - 6;
-    }
-    final progress = step / totalSteps;
+    const totalSteps = 26;
+    final progress = (_currentPage + 1) / totalSteps;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: progress),
       duration: const Duration(milliseconds: 500),
@@ -396,7 +382,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 _buildPageGender(),
                 _buildPageBirthday(),
                 _buildPageHeight(),
-                _buildPageAboutYouMenu(),
+                _buildPageStatus(),
                 _buildPageExercise(),
                 _buildPageDrinking(),
                 _buildPageSmoking(),
@@ -418,12 +404,56 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           Positioned(
-            bottom: 0,
+            top: MediaQuery.of(context).padding.top,
             left: 0,
             right: 0,
             child: _buildProgressBar(),
           ),
         ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════
+  // PAGE 19 - STATUS
+  // ══════════════════════════════════════════════════════
+  Widget _buildPageStatus() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _backButton(),
+            const SizedBox(height: 24),
+            _stepHeader(tr('status')),
+            const SizedBox(height: 32),
+            _optionPill(tr('student'), _status == 'student',
+                () => setState(() => _status = 'student')),
+            _optionPill(tr('employed'), _status == 'employed',
+                () => setState(() => _status = 'employed')),
+            if (_status == 'student' || _status == 'employed') ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _customOccupationController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: _status == 'student'
+                      ? 'Course of Study (Optional)'
+                      : 'Job Title (Optional)',
+                  labelStyle: const TextStyle(color: Colors.white60),
+                  enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30)),
+                  focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white)),
+                ),
+              ),
+            ],
+            const Spacer(),
+            _continueButton(enabled: _status != null, onTap: _nextPage),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -507,6 +537,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   _passwordController.text == _confirmPasswordController.text &&
                       _confirmPasswordController.text.isNotEmpty),
             ],
+            const SizedBox(height: 32),
+            _buildPremiumPill(),
             const SizedBox(height: 32),
             _continueButton(
               enabled: _emailController.text.isNotEmpty &&
@@ -696,6 +728,89 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
+  // ────── PREMIUM PILL ──────
+  Widget _buildPremiumPill() {
+    return Align(
+      alignment: Alignment.center,
+      child: GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: const Color(0xFF1E1E2E),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(LucideIcons.diamond,
+                      color: Color(0xFF00D9A6), size: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('premium_free_notice'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 16, height: 1.4),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    tr('current_users_count').replaceAll('{count}', '4.832'),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Color(0xFF00D9A6),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF00D9A6),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('OK',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF00D9A6).withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+                color: const Color(0xFF00D9A6).withValues(alpha: 0.5)),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.diamond, color: Color(0xFF00D9A6), size: 16),
+              SizedBox(width: 8),
+              Text(
+                'Premium račun aktiviran',
+                style: TextStyle(
+                    color: Color(0xFF00D9A6),
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // ══════════════════════════════════════════════════════
   // PAGE 2 – NAME
   // ══════════════════════════════════════════════════════
@@ -853,6 +968,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   child: _drumPicker(
                 items: months,
                 selectedIndex: _pickerMonth - 1,
+                looping: true,
                 onChanged: (i) => setState(() => _pickerMonth = i + 1),
               )),
               // Day
@@ -861,6 +977,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                   child: _drumPicker(
                     items: List.generate(31, (i) => '${i + 1}'),
                     selectedIndex: _pickerDay - 1,
+                    looping: true,
                     onChanged: (i) => setState(() => _pickerDay = i + 1),
                   )),
               // Year
@@ -870,6 +987,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                     items: List.generate(
                         maxYear - minYear + 1, (i) => '${maxYear - i}'),
                     selectedIndex: maxYear - _pickerYear,
+                    looping: false,
                     onChanged: (i) => setState(() => _pickerYear = maxYear - i),
                   )),
             ]),
@@ -901,7 +1019,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _drumPicker(
       {required List<String> items,
       required int selectedIndex,
-      required ValueChanged<int> onChanged}) {
+      required ValueChanged<int> onChanged,
+      bool looping = false}) {
     final ctrl = FixedExtentScrollController(initialItem: selectedIndex);
     return ListWheelScrollView.useDelegate(
       controller: ctrl,
@@ -909,23 +1028,45 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       perspective: 0.004,
       diameterRatio: 1.8,
       physics: const FixedExtentScrollPhysics(),
-      onSelectedItemChanged: onChanged,
-      childDelegate: ListWheelChildBuilderDelegate(
-        childCount: items.length,
-        builder: (ctx, i) {
-          final selected = i == selectedIndex;
-          return Center(
-              child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: GoogleFonts.outfit(
-              fontSize: selected ? 20 : 16,
-              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              color: selected ? Colors.white : Colors.white38,
+      onSelectedItemChanged: (i) {
+        if (looping) {
+          onChanged(i % items.length);
+        } else {
+          onChanged(i);
+        }
+      },
+      childDelegate: looping
+          ? ListWheelChildLoopingListDelegate(
+              children: List.generate(items.length, (i) {
+                final selected = i == (selectedIndex % items.length);
+                return Center(
+                    child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: GoogleFonts.outfit(
+                    fontSize: selected ? 20 : 16,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                    color: selected ? Colors.white : Colors.white38,
+                  ),
+                  child: Text(items[i]),
+                ));
+              }),
+            )
+          : ListWheelChildBuilderDelegate(
+              childCount: items.length,
+              builder: (ctx, i) {
+                final selected = i == selectedIndex;
+                return Center(
+                    child: AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: GoogleFonts.outfit(
+                    fontSize: selected ? 20 : 16,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                    color: selected ? Colors.white : Colors.white38,
+                  ),
+                  child: Text(items[i]),
+                ));
+              },
             ),
-            child: Text(items[i]),
-          ));
-        },
-      ),
     );
   }
 
@@ -1144,151 +1285,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
     );
   }
 
-  // ══════════════════════════════════════════════════════
-  // PAGE 6 – ABOUT YOU MENU
-  // ══════════════════════════════════════════════════════
-  Widget _buildPageAboutYouMenu() {
-    bool allFilled = _exerciseHabit != null &&
-        _drinkingHabit != null &&
-        _smokingHabit != null &&
-        _childrenPreference != null;
-
-    String exerciseLabel() {
-      if (_exerciseHabit == null) return '';
-      switch (_exerciseHabit) {
-        case 'active':
-          return tr('exercise_active');
-        case 'sometimes':
-          return tr('exercise_sometimes');
-        case 'almost_never':
-          return tr('almost_never');
-        default:
-          return '';
-      }
-    }
-
-    String drinkLabel() {
-      if (_drinkingHabit == null) return '';
-      switch (_drinkingHabit) {
-        case 'socially':
-          return tr('drink_socially');
-        case 'never':
-          return tr('drink_never');
-        case 'frequently':
-          return tr('drink_frequently');
-        case 'sober':
-          return tr('drink_sober');
-        default:
-          return '';
-      }
-    }
-
-    String smokeLabel() => _smokingHabit == null
-        ? ''
-        : (_smokingHabit == 'yes' ? tr('smoke_yes') : tr('smoke_no'));
-
-    String childrenLabel() =>
-        _childrenPreference == null ? '' : tr(_childrenPreference!);
-    String sleepLabel() => _sleepHabit == null ? '' : tr(_sleepHabit!);
-    String petLabel() => _petPreference == null ? '' : tr(_petPreference!);
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _backButton(),
-          const SizedBox(height: 24),
-          _stepHeader(tr('about_you_title')),
-          const SizedBox(height: 20),
-          Expanded(
-            child: ListView(
-              children: [
-                _menuRow(tr('do_you_exercise'), LucideIcons.dumbbell,
-                    exerciseLabel(), () => _goToPage(9)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('do_you_drink'), LucideIcons.coffee, drinkLabel(),
-                    () => _goToPage(10)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('do_you_smoke'), LucideIcons.wind, smokeLabel(),
-                    () => _goToPage(11)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('do_you_want_children'), Icons.child_care,
-                    childrenLabel(), () => _goToPage(12)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('introversion'), LucideIcons.user, '',
-                    () => _goToPage(13)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('sleep'), LucideIcons.moon, sleepLabel(),
-                    () => _goToPage(14)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('pets'), LucideIcons.dog, petLabel(),
-                    () => _goToPage(15)),
-                const Divider(color: Colors.white12),
-                _menuRow(
-                    tr('religion'),
-                    LucideIcons.heart,
-                    _religion != null ? tr(_religion!) : '',
-                    () => _goToPage(16)),
-                const Divider(color: Colors.white12),
-                _menuRow(
-                    tr('ethnicity'),
-                    LucideIcons.users,
-                    _ethnicity != null ? tr('ethnicity_$_ethnicity') : '',
-                    () => _goToPage(17)),
-                const Divider(color: Colors.white12),
-                _menuRow(
-                    tr('hair_color'),
-                    LucideIcons.scissors,
-                    _hairColor != null ? tr('hair_$_hairColor') : '',
-                    () => _goToPage(18)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('political_affiliation'), LucideIcons.flag, '',
-                    () => _goToPage(19)),
-                const Divider(color: Colors.white12),
-                _menuRow(tr('i_speak'), LucideIcons.languages,
-                    '$_languagesCount', () => _goToPage(20)),
-              ],
-            ),
-          ),
-          _continueButton(
-            enabled: allFilled,
-            onTap: () => _goToPage(21),
-          ),
-          const SizedBox(height: 16),
-        ]),
-      ),
-    );
-  }
-
   void _goToPage(int page) {
     _pageController.animateToPage(page,
         duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
     setState(() => _currentPage = page);
-  }
-
-  Widget _menuRow(
-      String title, IconData icon, String value, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Row(children: [
-          Icon(icon, color: Colors.white54, size: 20),
-          const SizedBox(width: 16),
-          Text(title,
-              style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600)),
-          const Spacer(),
-          if (value.isNotEmpty)
-            Text(value,
-                style: const TextStyle(color: Color(0xFF00D9A6), fontSize: 14)),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, color: Colors.white30, size: 20),
-        ]),
-      ),
-    );
   }
 
   // ══════════════════════════════════════════════════════
@@ -1297,7 +1297,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageReligion() {
     return _subScreen(
       title: tr('religion'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {'key': 'christianity', 'label': tr('christianity')},
         {'key': 'islam', 'label': tr('islam')},
@@ -1310,7 +1310,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _religion,
       onSelect: (val) {
         setState(() => _religion = val);
-        _goToPage(6);
+        _nextPage();
       },
     );
   }
@@ -1321,7 +1321,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageEthnicity() {
     return _subScreen(
       title: tr('ethnicity'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {'key': 'white', 'label': tr('ethnicity_white')},
         {'key': 'black', 'label': tr('ethnicity_black')},
@@ -1331,7 +1331,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _ethnicity,
       onSelect: (val) {
         setState(() => _ethnicity = val);
-        _goToPage(6);
+        _nextPage();
       },
     );
   }
@@ -1342,7 +1342,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageHairColor() {
     return _subScreen(
       title: tr('hair_color'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {'key': 'blonde', 'label': tr('hair_blonde')},
         {'key': 'brunette', 'label': tr('hair_brunette')},
@@ -1354,7 +1354,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _hairColor,
       onSelect: (val) {
         setState(() => _hairColor = val);
-        _goToPage(6);
+        _nextPage();
       },
     );
   }
@@ -1374,7 +1374,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(6),
+          _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('political_affiliation')),
           const SizedBox(height: 80),
@@ -1409,7 +1409,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             setState(() => _politicalAffiliationValue = -1);
           }),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(6)),
+          _continueButton(enabled: true, onTap: () => _nextPage()),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1422,7 +1422,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageExercise() {
     return _subScreen(
       title: tr('do_you_exercise'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {
           'key': 'active',
@@ -1444,7 +1444,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _exerciseHabit = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(6);
+          _nextPage();
         });
       },
     );
@@ -1456,7 +1456,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageDrinking() {
     return _subScreen(
       title: tr('do_you_drink'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {
           'key': 'socially',
@@ -1475,7 +1475,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _drinkingHabit = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(6);
+          _nextPage();
         });
       },
     );
@@ -1489,7 +1489,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          _backButtonTo(6),
+          _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('do_you_smoke')),
           const SizedBox(height: 32),
@@ -1510,7 +1510,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _continueButton(
             enabled: _smokingHabit != null &&
                 (_smokingHabit == 'yes' || _partnerSmokes != null),
-            onTap: () => _goToPage(6),
+            onTap: () => _nextPage(),
           ),
           const SizedBox(height: 16),
         ]),
@@ -1545,7 +1545,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 o['label'] as String,
                 selected == o['key'],
                 () => onSelect(o['key'] as String),
-                icon: o['icon'] as IconData,
+                icon: o['icon'] as IconData?,
               )),
           const Spacer(),
         ]),
@@ -1559,7 +1559,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageChildren() {
     return _subScreen(
       title: tr('do_you_want_children'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {
           'key': 'want_someday',
@@ -1591,7 +1591,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       onSelect: (k) {
         setState(() => _childrenPreference = k);
         Future.delayed(const Duration(milliseconds: 300), () {
-          _goToPage(6);
+          _nextPage();
         });
       },
     );
@@ -1605,7 +1605,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(6),
+          _backButton(),
           const SizedBox(height: 40),
           _stepHeader(tr('introversion')),
           const SizedBox(height: 80),
@@ -1621,8 +1621,18 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             activeColor: const Color(0xFF00D9A6),
             inactiveColor: Colors.white12,
           ),
+          const SizedBox(height: 16),
+          Text(
+            _introversionLevel <= 0.5
+                ? '${((1.0 - _introversionLevel) * 100).toInt()}% ${tr('introvert').toLowerCase()}'
+                : '${(_introversionLevel * 100).toInt()}% ${tr('extrovert').toLowerCase()}',
+            style: const TextStyle(
+                color: Color(0xFF00D9A6),
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
           const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(6)),
+          _continueButton(enabled: true, onTap: () => _nextPage()),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1632,7 +1642,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   Widget _buildPageSleep() {
     return _subScreen(
       title: tr('sleep'),
-      backTarget: 6,
+      backTarget: 8,
       options: [
         {
           'key': 'night_owl',
@@ -1648,7 +1658,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _sleepHabit,
       onSelect: (k) {
         setState(() => _sleepHabit = k);
-        _goToPage(6);
+        _nextPage();
       },
     );
   }
@@ -1658,7 +1668,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Column(children: [
-          _backButtonTo(6),
+          _backButton(),
           const SizedBox(height: 24),
           _stepHeader(tr('pets')),
           const SizedBox(height: 24),
@@ -1687,7 +1697,7 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             ),
           ),
           _continueButton(
-              enabled: _petPreference != null, onTap: () => _goToPage(6)),
+              enabled: _petPreference != null, onTap: () => _nextPage()),
           const SizedBox(height: 16),
         ]),
       ),
@@ -1695,44 +1705,68 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   }
 
   Widget _buildPageLanguages() {
+    final opts = [
+      'Angleščina 🇬🇧',
+      'Slovenščina 🇸🇮',
+      'Nemščina 🇩🇪',
+      'Italijanščina 🇮🇹',
+      'Hrvaščina 🇭🇷',
+      'Španščina 🇪🇸',
+      'Francoščina 🇫🇷',
+    ];
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Column(children: [
-          _backButtonTo(6),
-          const SizedBox(height: 40),
-          _stepHeader(tr('how_many_languages')),
-          const SizedBox(height: 48),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: List.generate(5, (i) {
-              final val = i + 1;
-              final sel = _languagesCount == val;
-              return GestureDetector(
-                onTap: () => setState(() => _languagesCount = val),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: sel ? const Color(0xFF00D9A6) : Colors.white12,
-                    shape: BoxShape.circle,
+      child: Column(children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _backButton(),
+            const SizedBox(height: 16),
+            _stepHeader(tr('how_many_languages')),
+            const SizedBox(height: 24),
+          ]),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            children: [
+              ...opts.map((lang) {
+                final sel = _selectedLanguages.contains(lang);
+                return _optionPill(lang, sel, () {
+                  setState(() {
+                    if (sel) {
+                      _selectedLanguages.remove(lang);
+                    } else {
+                      _selectedLanguages.add(lang);
+                    }
+                  });
+                });
+              }),
+              _optionPill('Custom', _showCustomLanguage, () {
+                setState(() => _showCustomLanguage = !_showCustomLanguage);
+              }),
+              if (_showCustomLanguage)
+                TextField(
+                  controller: _customLanguageController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: tr('write_answer'),
+                    hintStyle: const TextStyle(color: Colors.white30),
                   ),
-                  child: Center(
-                      child: Text('$val',
-                          style: TextStyle(
-                              color: sel ? Colors.black : Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold))),
+                  onChanged: (v) => setState(() {}),
                 ),
-              );
-            }),
+            ],
           ),
-          const Spacer(),
-          _continueButton(enabled: true, onTap: () => _goToPage(6)),
-          const SizedBox(height: 16),
-        ]),
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+          child: _continueButton(
+              enabled: _selectedLanguages.isNotEmpty ||
+                  (_showCustomLanguage &&
+                      _customLanguageController.text.isNotEmpty),
+              onTap: _nextPage),
+        ),
+      ]),
     );
   }
 
@@ -1765,8 +1799,8 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           RangeSlider(
             values: _ageRangePref,
             min: 18,
-            max: 100,
-            divisions: 82,
+            max: 65,
+            divisions: 47,
             labels: RangeLabels('${_ageRangePref.start.round()}',
                 '${_ageRangePref.end.round()}'),
             onChanged: (v) => setState(() => _ageRangePref = v),
@@ -2170,9 +2204,13 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
           _locationController.text.isNotEmpty ? _locationController.text : null,
       interestedIn: _wantToMeet.join(', '),
       isSmoker: _smokingHabit == 'yes',
-      occupation: 'Študent',
+      occupation: _status != null
+          ? (_customOccupationController.text.isNotEmpty
+              ? _customOccupationController.text
+              : (_status == 'student' ? 'Študent' : 'Zaposlen'))
+          : 'Študent', // Fallback
       drinkingHabit: _drinkingHabit ?? 'never',
-      introvertScale: 3,
+      introvertScale: (_introversionLevel * 100).toInt(),
       exerciseHabit: _exerciseHabit ?? 'sometimes',
       sleepSchedule: 'Nočna ptica',
       petPreference: 'Dog person',
@@ -2194,7 +2232,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       lookingFor: _datingPreference != null
           ? [datingMap[_datingPreference!] ?? _datingPreference!]
           : [],
-      languages: [],
+      languages: [
+        ..._selectedLanguages,
+        if (_showCustomLanguage && _customLanguageController.text.isNotEmpty)
+          _customLanguageController.text
+      ],
       hobbies: _selectedHobbies,
       prompts: prompts,
       isOnboarded: true,

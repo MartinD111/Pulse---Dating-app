@@ -148,6 +148,38 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                     ),
                   ),
 
+                  // Job / Occupation Overlay
+                  if (user.occupation?.isNotEmpty ?? false) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(LucideIcons.briefcase,
+                            size: 16, color: Colors.white54),
+                        const SizedBox(width: 4),
+                        Text(user.occupation ?? '',
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 15)),
+                      ],
+                    ),
+                  ],
+
+                  // Height Overlay
+                  if (user.height != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(LucideIcons.ruler,
+                            size: 16, color: Colors.white54),
+                        const SizedBox(width: 4),
+                        Text('${user.height} cm',
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 15)),
+                      ],
+                    ),
+                  ],
+
                   // Location
                   if ((user.location?.isNotEmpty ?? false)) ...[
                     const SizedBox(height: 6),
@@ -208,7 +240,16 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
                   // Looking for
                   if (user.lookingFor.isNotEmpty) ...[
                     _buildSection(
-                        t('looking_for', user.appLanguage), user.lookingFor),
+                        t('looking_for', user.appLanguage),
+                        user.isPremium
+                            ? user.lookingFor
+                            : user.lookingFor
+                                .where((item) =>
+                                    item == 'Dolgoročno razmerje' ||
+                                    item == 'Long-term relationship' ||
+                                    item == 'Prijateljstvo' ||
+                                    item == 'Friendship')
+                                .toList()),
                     const SizedBox(height: 24),
                   ],
 
@@ -248,6 +289,10 @@ class _ProfileCardPreviewState extends ConsumerState<ProfileCardPreview> {
     if (user.religion != null) {
       badges
           .add(_badge(LucideIcons.heart, t(user.religion!, user.appLanguage)));
+    }
+    if (user.hairColor != null) {
+      badges.add(
+          _badge(LucideIcons.scissors, t(user.hairColor!, user.appLanguage)));
     }
     if (user.ethnicity != null) {
       badges.add(_badge(LucideIcons.users,

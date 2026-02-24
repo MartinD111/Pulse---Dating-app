@@ -239,6 +239,21 @@ class ProfileDetailScreen extends ConsumerWidget {
                       ],
                     ),
                   ],
+                  if (match.height != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(LucideIcons.ruler,
+                            color: Colors.white70, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${match.height} cm',
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ],
                   if (match.school != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -368,6 +383,9 @@ class ProfileDetailScreen extends ConsumerWidget {
     }
     if (match.religion != null) {
       addBadge(LucideIcons.heart, t(match.religion!, lang));
+    }
+    if (match.hairColor != null) {
+      addBadge(LucideIcons.scissors, t(match.hairColor!, lang));
     }
     if (match.ethnicity != null) {
       addBadge(LucideIcons.users, t('ethnicity_${match.ethnicity}', lang));
@@ -524,7 +542,8 @@ class ProfileDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildPersonalitySection(BuildContext context) {
-    final val = match.introvertLevel!.toDouble();
+    final intLevel = match.introvertLevel ?? 50;
+    final val = intLevel.toDouble();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -555,11 +574,20 @@ class ProfileDetailScreen extends ConsumerWidget {
                 ),
                 child: Slider(
                   value: val,
-                  min: 1,
-                  max: 5,
-                  divisions: 4,
+                  min: 0,
+                  max: 100,
                   onChanged: null,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                intLevel <= 50
+                    ? '${100 - intLevel}% introvert'
+                    : '$intLevel% ekstrovert',
+                style: const TextStyle(
+                    color: Colors.pinkAccent,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ],
           ),

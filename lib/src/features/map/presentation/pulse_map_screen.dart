@@ -46,11 +46,12 @@ class PulseMapScreen extends ConsumerWidget {
 
             MarkerLayer(
               markers: [
+                _buildHeatwaveMarker(const LatLng(46.0569, 14.5058),
+                    "Ljubljana", 124, context, ref),
                 _buildHeatwaveMarker(
-                    const LatLng(46.0569, 14.5058), "Ljubljana", 124),
-                _buildHeatwaveMarker(const LatLng(46.0500, 14.5200), "BTC", 45),
+                    const LatLng(46.0500, 14.5200), "BTC", 45, context, ref),
                 _buildHeatwaveMarker(
-                    const LatLng(46.0600, 14.4900), "Tivoli", 32),
+                    const LatLng(46.0600, 14.4900), "Tivoli", 32, context, ref),
               ],
             ),
           ],
@@ -103,7 +104,8 @@ class PulseMapScreen extends ConsumerWidget {
     );
   }
 
-  Marker _buildHeatwaveMarker(LatLng point, String label, int intensity) {
+  Marker _buildHeatwaveMarker(LatLng point, String label, int intensity,
+      BuildContext context, WidgetRef ref) {
     // Increase size based on activity count
     final size = 80.0 + (intensity / 100) * 40.0;
 
@@ -111,7 +113,64 @@ class PulseMapScreen extends ConsumerWidget {
       point: point,
       width: size,
       height: size,
-      child: HeatwaveAnimation(intensity: intensity),
+      child: GestureDetector(
+        onTap: () {
+          // Add interaction when a ping is clicked
+          _showPingDetails(context, label, intensity);
+        },
+        child: HeatwaveAnimation(intensity: intensity),
+      ),
+    );
+  }
+
+  void _showPingDetails(BuildContext context, String label, int intensity) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E1E2E),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Activity: High\n$intensity people nearby",
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                // Here we would typically navigate to a profile or venue page
+                // We'll leave the actual navigation open per specifications
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00D9A6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Text("View Profile",
+                  style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -150,11 +209,34 @@ class _HeatwaveAnimationState extends State<HeatwaveAnimation>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
-        return CustomPaint(
-          painter: _HeatwavePainter(
-            progress: _controller.value,
-          ),
-          size: Size.infinite,
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            CustomPaint(
+              painter: _HeatwavePainter(
+                progress: _controller.value,
+              ),
+              size: Size.infinite,
+            ),
+            // User count overlay
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.5),
+                shape: BoxShape.circle,
+                border:
+                    Border.all(color: Colors.pinkAccent.withValues(alpha: 0.8)),
+              ),
+              child: Text(
+                '${widget.intensity}',
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

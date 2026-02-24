@@ -73,11 +73,11 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             const Icon(LucideIcons.mail, color: Colors.white70),
                         enabledBorder: OutlineInputBorder(
                           borderSide: const BorderSide(color: Colors.white30),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: const BorderSide(color: Colors.white),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
@@ -97,11 +97,11 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             const Icon(LucideIcons.lock, color: Colors.white70),
                         enabledBorder: OutlineInputBorder(
                           borderSide: const BorderSide(color: Colors.white30),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: const BorderSide(color: Colors.white),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         filled: true,
                         fillColor: Colors.white.withValues(alpha: 0.1),
@@ -111,14 +111,14 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
 
                     // Forgot password link
                     Align(
-                      alignment: Alignment.centerRight,
+                      alignment: Alignment.center,
                       child: GestureDetector(
                         onTap: () => context.push('/forgot-password'),
                         child: Text(
-                          tr('forgot_password_link'),
+                          'Forgot your password?',
                           style: GoogleFonts.outfit(
                             color: Colors.white70,
-                            fontSize: 13,
+                            fontSize: 14,
                             decoration: TextDecoration.underline,
                             decorationColor: Colors.white70,
                           ),
@@ -129,38 +129,90 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     const SizedBox(height: 24),
 
                     // Premium Free Notice Pill
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(
-                            color:
-                                const Color(0xFF00D9A6).withValues(alpha: 0.3)),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: const Color(0xFF1E1E2E),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(LucideIcons.diamond,
+                                    color: Color(0xFF00D9A6), size: 40),
+                                const SizedBox(height: 16),
+                                Text(
+                                  tr('premium_free_notice'),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      height: 1.4),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  tr('current_users_count')
+                                      .replaceAll('{count}', '4.832'),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: Color(0xFF00D9A6),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 24),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF00D9A6),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(30)),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                    ),
+                                    onPressed: () => Navigator.pop(ctx),
+                                    child: const Text('OK',
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color:
+                              const Color(0xFF00D9A6).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                              color: const Color(0xFF00D9A6)
+                                  .withValues(alpha: 0.5)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(LucideIcons.diamond,
+                                color: Color(0xFF00D9A6), size: 16),
+                            SizedBox(width: 8),
+                            Text(
+                              'Premium račun aktiviran',
+                              style: TextStyle(
+                                  color: Color(0xFF00D9A6),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Column(children: [
-                        Text(
-                          tr('premium_free_notice'),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          tr('current_users_count')
-                              .replaceAll('{count}', '4.832'),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Color(0xFF00D9A6),
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ]),
                     ),
                     const SizedBox(height: 24),
 
@@ -186,55 +238,66 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                             }
                           }),
 
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 16),
+                    // Are you new Pill
                     GestureDetector(
                       onTap: () => context.push('/onboarding'),
-                      child: Text(
-                        tr('are_you_new'),
-                        style: GoogleFonts.outfit(
-                          color: Colors.white,
-                          fontSize: 16,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.white,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.white38),
+                        ),
+                        child: Center(
+                          child: Text(
+                            "Are you new?",
+                            style: GoogleFonts.outfit(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    // Language selector pill at the bottom
+                    GestureDetector(
+                      onTap: () {
+                        _showLanguagePicker(context, lang, ref);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black26,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.language,
+                                color: Colors.white70, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              availableLanguages.firstWhere(
+                                  (l) => l['code'] == lang,
+                                  orElse: () =>
+                                      availableLanguages.first)['label']!,
+                              style: const TextStyle(
+                                  color: Colors.white, fontSize: 14),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_drop_down,
+                                color: Colors.white70, size: 18),
+                          ],
                         ),
                       ),
                     ),
                   ],
-                ),
-              ),
-            ),
-            // Language selector in top right
-            Positioned(
-              top: 50,
-              right: 20,
-              child: GestureDetector(
-                onTap: () {
-                  _showLanguagePicker(context, lang, ref);
-                },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black26,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.language,
-                          color: Colors.white70, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        availableLanguages.firstWhere((l) => l['code'] == lang,
-                            orElse: () => availableLanguages.first)['label']!,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down,
-                          color: Colors.white70, size: 18),
-                    ],
-                  ),
                 ),
               ),
             ),

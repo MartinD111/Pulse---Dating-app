@@ -28,6 +28,7 @@ class MatchProfile {
   final String? sleepSchedule; // 'Nočna ptica', 'Jutranja ptica'
   final String? petPreference; // 'Dog person', 'Cat person'
   final String? childrenPreference; // 'Da', 'Ne', 'Da, ampak kasneje'
+  final String? hairColor;
   final List<String> lookingFor;
 
   const MatchProfile({
@@ -53,6 +54,7 @@ class MatchProfile {
     this.sleepSchedule,
     this.petPreference,
     this.childrenPreference,
+    this.hairColor,
     this.lookingFor = const [],
   });
 }
