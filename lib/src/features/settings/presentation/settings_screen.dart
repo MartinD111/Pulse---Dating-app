@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:go_router/go_router.dart';
 import '../../../shared/ui/glass_card.dart';
 import '../../../shared/ui/primary_button.dart';
+import '../../dashboard/presentation/home_screen.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../../core/translations.dart';
 
@@ -759,24 +760,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
           // Introvert/Extrovert
           Text(_t('personality_type'),
               style: const TextStyle(color: Colors.white70, fontSize: 13)),
-          Slider(
-            value: (user.introvertScale ?? 3).toDouble(),
-            min: 1,
-            max: 5,
-            divisions: 4,
-            activeColor: Colors.pinkAccent,
-            inactiveColor: Colors.white24,
-            label: _getIntrovertLabel(user.introvertScale ?? 3),
-            onChanged: (val) {
-              _updateProfile(user.copyWith(introvertScale: val.round()));
-            },
-          ),
-          Center(
-            child: Text(
-              _getIntrovertLabel(user.introvertScale ?? 3),
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-          ),
+          Builder(builder: (context) {
+            final raw = (user.introvertScale ?? 50).clamp(0, 100);
+            String label = _getIntrovertLabel(_mapIntrovertScaleToBucket(raw));
+            return Column(
+              children: [
+                Slider(
+                  value: raw.toDouble(),
+                  min: 0,
+                  max: 100,
+                  divisions: 100,
+                  activeColor: Colors.pinkAccent,
+                  inactiveColor: Colors.white24,
+                  label: label,
+                  onChanged: (val) {
+                    final v = val.round().clamp(0, 100);
+                    _updateProfile(user.copyWith(introvertScale: v));
+                  },
+                ),
+                Center(
+                  child: Text(
+                    label,
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -995,6 +1005,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     return "";
   }
 
+  int _mapIntrovertScaleToBucket(int raw) {
+    // raw is 0–100, map to 1–5 buckets
+    if (raw <= 20) return 1;
+    if (raw <= 40) return 2;
+    if (raw <= 60) return 3;
+    if (raw <= 80) return 4;
+    return 5;
+  }
+
   Widget _buildPremiumPreferenceRow({
     required AuthUser user,
     required String title,
@@ -1134,6 +1153,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         activeTrackColor: Colors.amber.withValues(alpha: 0.5),
         inactiveTrackColor: Colors.white24,
         onChanged: (val) {
+          // If settings is the active tab, changing premium changes its index.
+          final currentIndex = ref.read(navIndexProvider);
+          if (currentIndex == 3 && !val) {
+            ref.read(navIndexProvider.notifier).state = 2;
+          } else if (currentIndex == 2 && val) {
+            ref.read(navIndexProvider.notifier).state = 3;
+          }
           _updateProfile(user.copyWith(isPremium: val));
         },
       ),

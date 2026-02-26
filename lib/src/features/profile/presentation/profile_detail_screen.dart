@@ -56,7 +56,7 @@ class ProfileDetailScreen extends ConsumerWidget {
                           ],
 
                           // Lifestyle & Habits
-                          _buildLifestyleSection(),
+                          _buildLifestyleSection(ref),
                           const SizedBox(height: 20),
 
                           // Interests
@@ -140,8 +140,8 @@ class ProfileDetailScreen extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _ActionButton(
-          icon: LucideIcons.x,
+        _ActionTextButton(
+          text: 'Ignore',
           color: Colors.redAccent,
           onTap: () {
             ref.read(matchControllerProvider.notifier).dismiss();
@@ -150,8 +150,8 @@ class ProfileDetailScreen extends ConsumerWidget {
             }
           },
         ),
-        _ActionButton(
-          icon: LucideIcons.check,
+        _ActionTextButton(
+          text: 'Pozdrav',
           color: Colors.greenAccent,
           onTap: () {
             ref.read(matchControllerProvider.notifier).like();
@@ -381,9 +381,6 @@ class ProfileDetailScreen extends ConsumerWidget {
         match.politicalAffiliation != 'politics_undisclosed') {
       addBadge(LucideIcons.flag, t(match.politicalAffiliation!, lang));
     }
-    if (match.religion != null) {
-      addBadge(LucideIcons.heart, t(match.religion!, lang));
-    }
     if (match.hairColor != null) {
       addBadge(LucideIcons.scissors, t(match.hairColor!, lang));
     }
@@ -429,7 +426,7 @@ class ProfileDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLifestyleSection() {
+  Widget _buildLifestyleSection(WidgetRef ref) {
     final habits = <Widget>[];
 
     Widget buildHabitItem(IconData icon, String label, String value) {
@@ -486,6 +483,16 @@ class ProfileDetailScreen extends ConsumerWidget {
     if (match.childrenPreference != null) {
       habits.add(buildHabitItem(
           LucideIcons.baby, "Otroci", match.childrenPreference!));
+    }
+    if (match.religion != null) {
+      final user = ref.read(authStateProvider);
+      final lang = user?.appLanguage ?? 'en';
+      habits.add(
+          buildHabitItem(LucideIcons.heart, "Vera", t(match.religion!, lang)));
+    }
+    if (match.ethnicity != null) {
+      habits.add(
+          buildHabitItem(LucideIcons.users, "Etničnost", match.ethnicity!));
     }
 
     return Column(
@@ -597,23 +604,23 @@ class ProfileDetailScreen extends ConsumerWidget {
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  final IconData icon;
+class _ActionTextButton extends StatelessWidget {
+  final String text;
   final Color color;
   final VoidCallback onTap;
 
-  const _ActionButton(
-      {required this.icon, required this.color, required this.onTap});
+  const _ActionTextButton(
+      {required this.text, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
         decoration: BoxDecoration(
             color: Colors.black.withValues(alpha: 0.6),
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(30),
             border: Border.all(color: color, width: 2),
             boxShadow: [
               BoxShadow(
@@ -621,7 +628,9 @@ class _ActionButton extends StatelessWidget {
                   blurRadius: 15,
                   spreadRadius: 2)
             ]),
-        child: Icon(icon, color: color, size: 36),
+        child: Text(text,
+            style: GoogleFonts.outfit(
+                color: color, fontSize: 18, fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -105,6 +105,10 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   final TextEditingController _customOccupationController =
       TextEditingController();
 
+  // Appearance toggles
+  bool _isClassicAppearance = true;
+  bool _isDarkModeRegistration = false;
+
   String? _religion;
   String? _ethnicity;
   String? _hairColor;
@@ -358,13 +362,22 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   @override
   Widget build(BuildContext context) {
     Color? accentColor;
-    if (_selectedGender == 'male') {
-      accentColor = Colors.cyan;
-    } else if (_selectedGender == 'female') {
-      accentColor = Colors.pinkAccent;
+    if (!_isClassicAppearance) {
+      if (_selectedGender == 'male') {
+        accentColor = Colors.cyan;
+      } else if (_selectedGender == 'female') {
+        accentColor = Colors.pinkAccent;
+      }
     }
 
+    // Determine background brightness based on _isDarkModeRegistration
+    final bgThemeColor = _isDarkModeRegistration
+        ? const Color(0xFF1E1E2E)
+        : const Color(
+            0xFF2A2A3E); // or handle it inside RadarBackground/Scaffold as needed
+
     return Scaffold(
+      backgroundColor: bgThemeColor,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -872,6 +885,52 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
             setState(() => _selectedGender = 'non_binary');
             _showNonBinaryPopup();
           }, icon: LucideIcons.userX),
+          const SizedBox(height: 32),
+          _stepHeader(tr('app_appearance'), subtitle: ''),
+          const SizedBox(height: 16),
+          // Toggle 1: Classic or gender based
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(20),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Classic or gender based',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                Switch(
+                  value: _isClassicAppearance,
+                  onChanged: (val) =>
+                      setState(() => _isClassicAppearance = val),
+                  activeThumbColor: const Color(0xFF00D9A6),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Toggle 2: Dark mode
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(20),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Dark mode',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
+                Switch(
+                  value: _isDarkModeRegistration,
+                  onChanged: (val) =>
+                      setState(() => _isDarkModeRegistration = val),
+                  activeThumbColor: const Color(0xFF00D9A6),
+                ),
+              ],
+            ),
+          ),
           const Spacer(),
           _continueButton(enabled: _selectedGender != null, onTap: _nextPage),
           const SizedBox(height: 16),
@@ -1310,7 +1369,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _religion,
       onSelect: (val) {
         setState(() => _religion = val);
-        _nextPage();
       },
     );
   }
@@ -1331,7 +1389,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _ethnicity,
       onSelect: (val) {
         setState(() => _ethnicity = val);
-        _nextPage();
       },
     );
   }
@@ -1354,7 +1411,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _hairColor,
       onSelect: (val) {
         setState(() => _hairColor = val);
-        _nextPage();
       },
     );
   }
@@ -1443,9 +1499,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _exerciseHabit,
       onSelect: (k) {
         setState(() => _exerciseHabit = k);
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _nextPage();
-        });
       },
     );
   }
@@ -1474,9 +1527,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _drinkingHabit,
       onSelect: (k) {
         setState(() => _drinkingHabit = k);
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _nextPage();
-        });
       },
     );
   }
@@ -1548,6 +1598,11 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                 icon: o['icon'] as IconData?,
               )),
           const Spacer(),
+          _continueButton(
+            enabled: selected != null,
+            onTap: _nextPage,
+          ),
+          const SizedBox(height: 16),
         ]),
       ),
     );
@@ -1590,9 +1645,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _childrenPreference,
       onSelect: (k) {
         setState(() => _childrenPreference = k);
-        Future.delayed(const Duration(milliseconds: 300), () {
-          _nextPage();
-        });
       },
     );
   }
@@ -1658,7 +1710,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
       selected: _sleepHabit,
       onSelect: (k) {
         setState(() => _sleepHabit = k);
-        _nextPage();
       },
     );
   }
@@ -1927,17 +1978,27 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
                             ...e.value.map((hobby) {
                               final sel = _selectedHobbies.contains(hobby);
                               return FilterChip(
-                                label: Text(hobby,
-                                    style: TextStyle(
-                                        color: sel
-                                            ? Colors.black
-                                            : Colors.white70)),
+                                label: Text(
+                                  hobby,
+                                  style: TextStyle(
+                                    color: sel ? Colors.black : Colors.white,
+                                    fontWeight:
+                                        sel ? FontWeight.bold : FontWeight.w500,
+                                  ),
+                                ),
                                 selected: sel,
                                 onSelected: (s) => setState(() => s
                                     ? _selectedHobbies.add(hobby)
                                     : _selectedHobbies.remove(hobby)),
                                 selectedColor: const Color(0xFF00D9A6),
                                 backgroundColor: Colors.white12,
+                                shape: StadiumBorder(
+                                  side: BorderSide(
+                                    color: sel
+                                        ? const Color(0xFF00D9A6)
+                                        : Colors.white24,
+                                  ),
+                                ),
                                 checkmarkColor: Colors.black,
                               );
                             }),
@@ -2078,7 +2139,6 @@ class _RegistrationFlowState extends ConsumerState<RegistrationFlow> {
   // ══════════════════════════════════════════════════════
   Widget _buildPagePrompt() {
     final promptKeys = [
-      'prompt_1',
       'prompt_2',
       'prompt_3',
       'prompt_4',
