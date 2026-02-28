@@ -3,17 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme.dart';
 import 'core/router.dart';
 
-class PulseApp extends ConsumerWidget {
-  const PulseApp({super.key});
+class TrembleApp extends ConsumerWidget {
+  const TrembleApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Pulse',
+      title: 'Tremble',
       debugShowCheckedModeBanner: false,
-      theme: PulseTheme.lightTheme,
+      theme: TrembleTheme.lightTheme,
+      darkTheme: TrembleTheme.darkTheme,
       routerConfig: router,
     );
   }

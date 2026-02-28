@@ -1,7 +1,7 @@
-# https://dart.dev/guides/libraries/private-files
-# Created by https://www.toptal.com/developers/gitignore/api/flutter,dart
+// https://dart.dev/guides/libraries/private-files
+// Created by https://www.toptal.com/developers/gitignore/api/flutter,dart
 
-# Miscellaneous
+// Miscellaneous
 *.log
 *.jks
 *.p8
@@ -10,7 +10,7 @@
 *.mobileprovision
 *.orig.*
 
-# Flutter-specific
+// Flutter-specific
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -19,14 +19,14 @@
 .pub/
 build/
 
-# Android-specific
+// Android-specific
 android/**/generated/
 android/local.properties
 android/key.properties
 *.apk
 *.aab
 
-# iOS-specific
+// iOS-specific
 ios/Pods/
 ios/.xcode.env.local
 ios/**/config.h
@@ -47,22 +47,36 @@ DerivedData/
 *.ipa
 *.xcuserstate
 
-# MacOS-specific
+// MacOS-specific
 .DS_Store
 
-# Web-specific
+// Web-specific
 lib/generated_plugin_registrant.dart
 
-# VS Code-specific
+// VS Code-specific
 .vscode/
 
-# IntelliJ-specific
+// IntelliJ-specific
 *.iml
 *.ipr
 *.iws
 .idea/
 
-# Custom Project Specific
+// ─── FIREBASE SECRETS — NEVER COMMIT THESE ───────────────────────────────────
+// These contain API keys and app credentials. Each developer adds their own.
+google-services.json
+android/app/google-services.json
+GoogleService-Info.plist
+ios/Runner/GoogleService-Info.plist
+lib/src/core/firebase_options.dart
+
+// ─── ENVIRONMENT & SECRETS ────────────────────────────────────────────────────
+.env
+.env.*
+secrets.dart
+lib/src/core/secrets.dart
+
+// ─── CUSTOM PROJECT SPECIFIC ─────────────────────────────────────────────────
 analysis.json
 analysis.txt
 analysis_clean.txt
@@ -87,7 +101,7 @@ temp_analyze.txt
 hs_err_pid*.log
 replay_pid*.log
 
-# Symbolic links to directories
+// Symbolic links to directories
 temp/
 PulseV3/
 node_modules/

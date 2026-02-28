@@ -31,7 +31,7 @@ class GradientScaffold extends ConsumerWidget {
     final showPing = user?.showPingAnimation ?? true;
 
     final bgColors = gradientColors ??
-        PulseTheme.getGradient(
+        TrembleTheme.getGradient(
           isDarkMode: user?.isDarkMode ?? false,
           isPrideMode: user?.isPrideMode ?? false,
           gender: user?.gender,
