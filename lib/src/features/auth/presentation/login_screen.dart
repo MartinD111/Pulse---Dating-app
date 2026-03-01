@@ -49,11 +49,12 @@ class _LoginScreenStatefulState extends ConsumerState<_LoginScreenStateful> {
                     const Icon(LucideIcons.heartPulse,
                         size: 80, color: Colors.white),
                     const SizedBox(height: 10),
-                    Text("Pulse",
+                    Text("Tremble",
                         style: GoogleFonts.outfit(
                             fontSize: 48,
                             fontWeight: FontWeight.bold,
                             color: Colors.white)),
+
                     const SizedBox(height: 8),
                     Text(tr('onb1_title'), // Using a translation for subtitle
                         style: GoogleFonts.outfit(
